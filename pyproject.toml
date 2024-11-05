@@ -1,0 +1,16 @@
+[project]
+name = "codemeticulous"
+version = "0.1.0"
+description = "validate and convert software metadata formats with pydantic"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic2-schemaorg==0.2.0",
+    "pydantic>=2.9.2",
+]
+
+[dependency-groups]
+dev = [
+    "black>=24.8.0",
+    "datamodel-code-generator>=0.26.2",
+]
