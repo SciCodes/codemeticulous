@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# wrapper for datamodel-codegen
+# generates pydantic v2 models from a schema file
+
+# generate models
+datamodel-codegen --input "$1" --output "$2/model.gen.py" \
+    --output-model-type pydantic.BaseModel \
+    --field-constraints --allow-population-by-field-name \
+    --collapse-root-models --use-default-kwarg \
+    --strip-default-none --enum-field-as-literal one \
+    --use-standard-collections --use-field-description \
+    --keep-model-order --disable-timestamp
+# FIXME: this has an option to switch from 'forbid' extra fields to 'allow', but not
+# the default of 'ignore', which is preferable?
+
+# replace "from pydantic import ..." with "from pydantic.v1 import ..."
+sed -i 's/from pydantic import/from pydantic.v1 import/g' "$2/model.gen.py"
+
+# run formatter
+black "$2/model.gen.py"
