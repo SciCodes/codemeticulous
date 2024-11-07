@@ -45,6 +45,18 @@ class FlexibleRole(Role):
         extra = "allow"
 
 
+Actor = FlexibleRole | Person | Organization
+ActorList = list[Actor]
+ActorListOrSingle = Actor | ActorList
+
+TextOrUrl = str | AnyUrl
+TextOrUrlList = list[TextOrUrl]
+TextOrUrlListOrSingle = TextOrUrl | TextOrUrlList
+
+Software = SoftwareSourceCode | SoftwareApplicationType | str | AnyUrl
+SoftwareList = list[Software]
+SoftwareListOrSingle = Software | SoftwareList
+
 class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     """CodeMeta v3 schema (supports v2 fields aliased to v3)
     see: https://codemeta.github.io/terms/
@@ -62,87 +74,42 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     targetProduct: Optional[
         list[SoftwareApplicationType | str] | SoftwareApplicationType | str
     ]
-    applicationCategory: Optional[list[str | AnyUrl] | str | AnyUrl]
-    applicationSubCategory: Optional[list[str | AnyUrl] | str | AnyUrl]
+    applicationCategory: Optional[TextOrUrlListOrSingle]
+    applicationSubCategory: Optional[TextOrUrlListOrSingle]
     downloadUrl: Optional[list[AnyUrl] | AnyUrl]
     fileSize: Optional[str]
     installUrl: Optional[list[AnyUrl] | AnyUrl]
-    memoryRequirements: Optional[list[str | AnyUrl] | str | AnyUrl]
+    memoryRequirements: Optional[TextOrUrlListOrSingle]
     operatingSystem: Optional[list[str] | str]
     permissions: Optional[list[str] | str]
     processorRequirements: Optional[list[str] | str]
-    releaseNotes: Optional[list[str | AnyUrl] | str | AnyUrl]
+    releaseNotes: Optional[TextOrUrlListOrSingle]
     softwareHelp: Optional[list[CreativeWorkType] | CreativeWorkType]
     softwareRequirements: Optional[
-        list[SoftwareSourceCode | str | AnyUrl] | SoftwareSourceCode | str | AnyUrl
+        SoftwareListOrSingle
     ]
     softwareVersion: Optional[str]
-    storageRequirements: Optional[list[str | AnyUrl] | str | AnyUrl]
+    storageRequirements: Optional[TextOrUrlListOrSingle]
     supportingData: Optional[list[DataFeed] | DataFeed]
-    author: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
+    author: Optional[ActorListOrSingle]
     citation: Optional[list[CreativeWorkType | AnyUrl] | CreativeWorkType | AnyUrl]
-    contributor: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
-    copyrightHolder: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
+    contributor: Optional[ActorListOrSingle]
+    copyrightHolder: Optional[ActorListOrSingle]
     copyrightYear: Optional[list[int] | int]
-    creator: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
+    creator: Optional[ActorListOrSingle]
     dateCreated: Optional[date | datetime]
     dateModified: Optional[date | datetime]
     datePublished: Optional[date | datetime]
     editor: Optional[list[Person] | Person]
     encoding: Optional[list[MediaObjectType] | MediaObjectType]
-    fileFormat: Optional[list[str | AnyUrl] | str | AnyUrl]
-    funder: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
+    fileFormat: Optional[TextOrUrlListOrSingle]
+    funder: Optional[ActorListOrSingle]
     keywords: Optional[list[str] | str]
     license: Optional[list[CreativeWorkType | AnyUrl] | CreativeWorkType | AnyUrl]
-    producer: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
-    provider: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
-    publisher: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
-    sponsor: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
+    producer: Optional[ActorListOrSingle]
+    provider: Optional[ActorListOrSingle]
+    publisher: Optional[ActorListOrSingle]
+    sponsor: Optional[ActorListOrSingle]
     version: Optional[list[int | float | str] | int | float | str]
     isAccessibleForFree: Optional[bool]
     isPartOf: Optional[list[CreativeWorkType] | CreativeWorkType]
@@ -160,7 +127,7 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     # CodeMeta-specific terms
     # these are more loosely defined than the schema.org/SoftwareSourceCode properties above
     hasSourceCode: Optional[
-        list[SoftwareSourceCode | str | AnyUrl] | SoftwareSourceCode | str | AnyUrl
+        SoftwareListOrSingle
     ]
     isSourceCodeOf: Optional[
         list[SoftwareApplicationType | str | AnyUrl]
@@ -169,14 +136,9 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
         | AnyUrl
     ]
     softwareSuggestions: Optional[
-        list[SoftwareSourceCode | str | AnyUrl] | SoftwareSourceCode | str | AnyUrl
+        SoftwareListOrSingle
     ]
-    maintainer: Optional[
-        list[FlexibleRole | Person | Organization]
-        | FlexibleRole
-        | Person
-        | Organization
-    ]
+    maintainer: Optional[ActorListOrSingle]
     contIntegration: Optional[list[AnyUrl] | AnyUrl]
     continuousIntegration: Optional[list[AnyUrl] | AnyUrl]
     buildInstructions: Optional[list[AnyUrl] | AnyUrl]
