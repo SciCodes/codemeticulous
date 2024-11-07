@@ -5,138 +5,16 @@ from __future__ import annotations
 
 from datetime import date
 from enum import Enum
-from typing import Literal, Optional, Union
+from typing import List, Literal, Optional, Union
 
-from pydantic.v1 import AnyUrl, BaseModel, Extra, Field
+from pydantic.v1 import AnyUrl, BaseModel, Extra, Field, conint, constr
+
+from codemeticulous.common.mixins import ByAliasExcludeNoneMixin
 
 
-class CitationFileFormat(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_population_by_field_name = True
-
-    abstract: Optional[str] = Field(default=None, min_length=1)
-    """
-    A description of the software or dataset.
-    """
-    authors: list[Union[Person, Entity]] = Field(..., min_items=1, unique_items=True)
-    """
-    The author(s) of the software or dataset.
-    """
-    cff_version: str = Field(
-        ..., alias="cff-version", examples=["1.2.0"], regex="^1\\.2\\.0$"
-    )
-    """
-    The version of CFF used for providing the citation metadata.
-    """
-    commit: Optional[str] = Field(default=None, min_length=1)
-    """
-    The (e.g., Git) commit hash or (e.g., Subversion) revision number of the work.
-    """
-    contact: Optional[list[Union[Person, Entity]]] = Field(
-        default=None, min_items=1, unique_items=True
-    )
-    """
-    The contact person, group, company, etc. for the software or dataset.
-    """
-    date_released: Optional[date] = Field(
-        default=None,
-        alias="date-released",
-        examples=["1900-01-01", "2020-12-31"],
-        regex="^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$",
-    )
-    """
-    The date the work has been released.
-    """
-    doi: Optional[str] = Field(
-        default=None,
-        examples=["10.5281/zenodo.1003150"],
-        regex="^10\\.\\d{4,9}(\\.\\d+)?/[A-Za-z0-9:/_;\\-\\.\\(\\)\\[\\]\\\\]+$",
-    )
-    """
-    The DOI of the work (i.e., 10.5281/zenodo.1003150, not the resolver URL http://doi.org/10.5281/zenodo.1003150).
-    """
-    identifiers: Optional[
-        list[Union[Identifier1, Identifier2, Identifier3, Identifier4]]
-    ] = Field(default=None, min_items=1, unique_items=True)
-    """
-    The identifiers of the software or dataset.
-    """
-    keywords: Optional[list[str]] = Field(
-        default=None, min_items=1, min_length=1, unique_items=True
-    )
-    """
-    Keywords that describe the work.
-    """
-    license: Optional[Union[LicenseEnum, License1]]
-    """
-    An SPDX license identifier.
-    """
-    license_url: Optional[AnyUrl] = Field(default=None, alias="license-url")
-    """
-    The URL of the license text under which the software or dataset is licensed (only for non-standard licenses not included in the SPDX License List).
-    """
-    message: str = Field(
-        ...,
-        examples=[
-            "If you use this software, please cite it using the metadata from this file.",
-            "Please cite this software using these metadata.",
-            "Please cite this software using the metadata from 'preferred-citation'.",
-        ],
-        min_length=1,
-    )
-    """
-    A message to the human reader of the file to let them know what to do with the citation metadata.
-    """
-    preferred_citation: Optional[Reference] = Field(
-        default=None, alias="preferred-citation"
-    )
-    """
-    A reference to another work that should be cited instead of the software or dataset itself.
-    """
-    references: Optional[list[Reference]] = Field(
-        default=None, min_items=1, unique_items=True
-    )
-    """
-    Reference(s) to other creative works.
-    """
-    repository: Optional[AnyUrl] = Field(
-        default=None,
-        examples=[
-            "https://edoc.hu-berlin.de/handle/18452/23016",
-            "https://ascl.net/2105.013",
-        ],
-    )
-    """
-    The URL of the software or dataset in a repository (when the repository is neither a source code repository nor a build artifact repository).
-    """
-    repository_artifact: Optional[AnyUrl] = Field(
-        default=None, alias="repository-artifact"
-    )
-    """
-    The URL of the software in a build artifact/binary repository.
-    """
-    repository_code: Optional[AnyUrl] = Field(default=None, alias="repository-code")
-    """
-    The URL of the software or dataset in a source code repository.
-    """
-    title: str = Field(..., min_length=1)
-    """
-    The name of the software or dataset.
-    """
-    type: Optional[Type] = "software"
-    """
-    The type of the work.
-    """
-    url: Optional[AnyUrl]
-    """
-    The URL of a landing page/website for the software or dataset.
-    """
-    version: Optional[Union[Version1, float]]
-    """
-    The version of the software or dataset.
-    """
-
+class Type(Enum):
+    dataset = "dataset"
+    software = "software"
 
 class Country(Enum):
     AD = "AD"
@@ -388,220 +266,6 @@ class Country(Enum):
     ZA = "ZA"
     ZM = "ZM"
     ZW = "ZW"
-
-
-class End(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The end page of the work.
-    """
-
-
-class Entity(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_population_by_field_name = True
-
-    address: Optional[str] = Field(default=None, min_length=1)
-    """
-    The entity's address.
-    """
-    alias: Optional[str] = Field(default=None, min_length=1)
-    """
-    The entity's alias.
-    """
-    city: Optional[str] = Field(default=None, min_length=1)
-    """
-    The entity's city.
-    """
-    country: Optional[Country]
-    """
-    The entity's country.
-    """
-    date_end: Optional[date] = Field(
-        default=None,
-        alias="date-end",
-        examples=["1900-01-01", "2020-12-31"],
-        regex="^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$",
-    )
-    """
-    The entity's ending date, e.g., when the entity is a conference.
-    """
-    date_start: Optional[date] = Field(
-        default=None,
-        alias="date-start",
-        examples=["1900-01-01", "2020-12-31"],
-        regex="^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$",
-    )
-    """
-    The entity's starting date, e.g., when the entity is a conference.
-    """
-    email: Optional[str] = Field(default=None, regex="^[\\S]+@[\\S]+\\.[\\S]{2,}$")
-    """
-    The entity's email address.
-    """
-    fax: Optional[str] = Field(default=None, min_length=1)
-    """
-    The entity's fax number.
-    """
-    location: Optional[str] = Field(default=None, min_length=1)
-    """
-    The entity's location, e.g., when the entity is a conference.
-    """
-    name: str = Field(..., min_length=1)
-    """
-    The entity's name.
-    """
-    orcid: Optional[AnyUrl]
-    """
-    The entity's orcid.
-    """
-    post_code: Optional[Union[PostCode1, float]] = Field(
-        default=None, alias="post-code"
-    )
-    """
-    The entity's post code.
-    """
-    region: Optional[str] = Field(default=None, min_length=1)
-    """
-    The entity's region.
-    """
-    tel: Optional[str] = Field(default=None, min_length=1)
-    """
-    The entity's telephone number.
-    """
-    website: Optional[AnyUrl]
-    """
-    The entity's website.
-    """
-
-
-class Identifier1(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_population_by_field_name = True
-
-    description: Optional[str] = Field(
-        default=None,
-        examples=[
-            "The version DOI for this version, which has a relation childOf with the concept DOI specified in the doi field in the root of this file.",
-            "The identifier provided by Archival Repository, which points to this version of the software.",
-        ],
-        min_length=1,
-    )
-    """
-    A description for a specific identifier value.
-    """
-    type: Literal["doi"]
-    value: str = Field(
-        ...,
-        examples=["10.5281/zenodo.1003150"],
-        regex="^10\\.\\d{4,9}(\\.\\d+)?/[A-Za-z0-9:/_;\\-\\.\\(\\)\\[\\]\\\\]+$",
-    )
-    """
-    The DOI of the work (i.e., 10.5281/zenodo.1003150, not the resolver URL http://doi.org/10.5281/zenodo.1003150).
-    """
-
-
-class Identifier2(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_population_by_field_name = True
-
-    description: Optional[str] = Field(
-        default=None,
-        examples=[
-            "The version DOI for this version, which has a relation childOf with the concept DOI specified in the doi field in the root of this file.",
-            "The identifier provided by Archival Repository, which points to this version of the software.",
-        ],
-        min_length=1,
-    )
-    """
-    A description for a specific identifier value.
-    """
-    type: Literal["url"]
-    value: AnyUrl
-
-
-class Identifier3(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_population_by_field_name = True
-
-    description: Optional[str] = Field(
-        default=None,
-        examples=[
-            "The version DOI for this version, which has a relation childOf with the concept DOI specified in the doi field in the root of this file.",
-            "The identifier provided by Archival Repository, which points to this version of the software.",
-        ],
-        min_length=1,
-    )
-    """
-    A description for a specific identifier value.
-    """
-    type: Literal["swh"]
-    value: str = Field(
-        ...,
-        examples=[
-            "swh:1:cnt:94a9ed024d3859793618152ea559a168bbcbb5e2",
-            "swh:1:dir:d198bc9d7a6bcf6db04f476d29314f157507d505",
-            "swh:1:rev:309cf2674ee7a0749978cf8265ab91a60aea0f7d",
-            "swh:1:rel:22ece559cc7cc2364edc5e5593d63ae8bd229f9f",
-            "swh:1:snp:c7c108084bc0bf3d81436bf980b46e98bd338453",
-        ],
-        regex="^swh:1:(snp|rel|rev|dir|cnt):[0-9a-fA-F]{40}$",
-    )
-    """
-    The Software Heritage identifier (without further qualifiers such as origin, visit, anchor, path).
-    """
-
-
-class Identifier4(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_population_by_field_name = True
-
-    description: Optional[str] = Field(
-        default=None,
-        examples=[
-            "The version DOI for this version, which has a relation childOf with the concept DOI specified in the doi field in the root of this file.",
-            "The identifier provided by Archival Repository, which points to this version of the software.",
-        ],
-        min_length=1,
-    )
-    """
-    A description for a specific identifier value.
-    """
-    type: Literal["other"]
-    value: str = Field(..., min_length=1)
-
-
-class Issue(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The issue of a periodical in which a work appeared.
-    """
-
-
-class License1(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: list[LicenseEnum] = Field(
-        ...,
-        examples=[["Apache-2.0", "MIT"], ["GPL-3.0", "GPL-3.0-or-later"]],
-        min_items=1,
-        unique_items=True,
-    )
-    """
-    An SPDX license identifier.
-    """
 
 
 class LicenseEnum(Enum):
@@ -1066,37 +730,7 @@ class LicenseEnum(Enum):
     ZPL_2_1 = "ZPL-2.1"
 
 
-class LocEnd(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The line of code in the file where the work ends.
-    """
-
-
-class LocStart(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The line of code in the file where the work starts.
-    """
-
-
-class Month(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: int = Field(..., ge=1, le=12)
-    """
-    The month in which a work has been published.
-    """
-
-
-class Month1(Enum):
+class Month(Enum):
     field_1 = "1"
     field_2 = "2"
     field_3 = "3"
@@ -1111,506 +745,6 @@ class Month1(Enum):
     field_12 = "12"
 
 
-class Number(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The accession number for a work.
-    """
-
-
-class NumberVolumes(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The number of volumes making up the collection in which the work has been published.
-    """
-
-
-class Pages(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The number of pages of the work.
-    """
-
-
-class Person(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_population_by_field_name = True
-
-    address: Optional[str] = Field(default=None, min_length=1)
-    """
-    The person's address.
-    """
-    affiliation: Optional[str] = Field(default=None, min_length=1)
-    """
-    The person's affilitation.
-    """
-    alias: Optional[str] = Field(default=None, min_length=1)
-    """
-    The person's alias.
-    """
-    city: Optional[str] = Field(default=None, min_length=1)
-    """
-    The person's city.
-    """
-    country: Optional[Country]
-    """
-    The person's country.
-    """
-    email: Optional[str] = Field(default=None, regex="^[\\S]+@[\\S]+\\.[\\S]{2,}$")
-    """
-    The person's email address.
-    """
-    family_names: Optional[str] = Field(
-        default=None, alias="family-names", min_length=1
-    )
-    """
-    The person's family names.
-    """
-    fax: Optional[str] = Field(default=None, min_length=1)
-    """
-    The person's fax number.
-    """
-    given_names: Optional[str] = Field(default=None, alias="given-names", min_length=1)
-    """
-    The person's given names.
-    """
-    name_particle: Optional[str] = Field(
-        default=None, alias="name-particle", examples=["von"], min_length=1
-    )
-    """
-    The person's name particle, e.g., a nobiliary particle or a preposition meaning 'of' or 'from' (for example 'von' in 'Alexander von Humboldt').
-    """
-    name_suffix: Optional[str] = Field(
-        default=None, alias="name-suffix", examples=["Jr.", "III"], min_length=1
-    )
-    """
-    The person's name-suffix, e.g. 'Jr.' for Sammy Davis Jr. or 'III' for Frank Edwin Wright III.
-    """
-    orcid: Optional[AnyUrl]
-    """
-    The person's ORCID.
-    """
-    post_code: Optional[Union[PostCode1, float]] = Field(
-        default=None, alias="post-code"
-    )
-    """
-    The person's post-code.
-    """
-    region: Optional[str] = Field(default=None, min_length=1)
-    """
-    The person's region.
-    """
-    tel: Optional[str] = Field(default=None, min_length=1)
-    """
-    The person's phone number.
-    """
-    website: Optional[AnyUrl]
-    """
-    The person's website.
-    """
-
-
-class PostCode1(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    A post code.
-    """
-
-
-class Reference(BaseModel):
-    class Config:
-        extra = Extra.forbid
-        allow_population_by_field_name = True
-
-    abbreviation: Optional[str] = Field(default=None, min_length=1)
-    """
-    The abbreviation of a work.
-    """
-    abstract: Optional[str] = Field(default=None, min_length=1)
-    """
-    The abstract of a work.
-    """
-    authors: list[Union[Person, Entity]] = Field(..., min_items=1, unique_items=True)
-    """
-    The author(s) of a work.
-    """
-    collection_doi: Optional[str] = Field(
-        default=None,
-        alias="collection-doi",
-        examples=["10.5281/zenodo.1003150"],
-        regex="^10\\.\\d{4,9}(\\.\\d+)?/[A-Za-z0-9:/_;\\-\\.\\(\\)\\[\\]\\\\]+$",
-    )
-    """
-    The DOI of a collection containing the work.
-    """
-    collection_title: Optional[str] = Field(
-        default=None, alias="collection-title", min_length=1
-    )
-    """
-    The title of a collection or proceedings.
-    """
-    collection_type: Optional[str] = Field(
-        default=None, alias="collection-type", min_length=1
-    )
-    """
-    The type of a collection.
-    """
-    commit: Optional[str] = Field(default=None, min_length=1)
-    """
-    The (e.g., Git) commit hash or (e.g., Subversion) revision number of the work.
-    """
-    conference: Optional[Entity]
-    """
-    The conference where the work was presented.
-    """
-    contact: Optional[list[Union[Person, Entity]]] = Field(
-        default=None, min_items=1, unique_items=True
-    )
-    """
-    The contact person, group, company, etc. for a work.
-    """
-    copyright: Optional[str] = Field(default=None, min_length=1)
-    """
-    The copyright information pertaining to the work.
-    """
-    data_type: Optional[str] = Field(default=None, alias="data-type", min_length=1)
-    """
-    The data type of a data set.
-    """
-    database: Optional[str] = Field(default=None, min_length=1)
-    """
-    The name of the database where a work was accessed/is stored.
-    """
-    database_provider: Optional[Entity] = Field(default=None, alias="database-provider")
-    """
-    The provider of the database where a work was accessed/is stored.
-    """
-    date_accessed: Optional[date] = Field(
-        default=None,
-        alias="date-accessed",
-        examples=["1900-01-01", "2020-12-31"],
-        regex="^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$",
-    )
-    """
-    The date the work was accessed.
-    """
-    date_downloaded: Optional[date] = Field(
-        default=None,
-        alias="date-downloaded",
-        examples=["1900-01-01", "2020-12-31"],
-        regex="^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$",
-    )
-    """
-    The date the work has been downloaded.
-    """
-    date_published: Optional[date] = Field(
-        default=None,
-        alias="date-published",
-        examples=["1900-01-01", "2020-12-31"],
-        regex="^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$",
-    )
-    """
-    The date the work has been published.
-    """
-    date_released: Optional[date] = Field(
-        default=None,
-        alias="date-released",
-        examples=["1900-01-01", "2020-12-31"],
-        regex="^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$",
-    )
-    """
-    The date the work has been released.
-    """
-    department: Optional[str] = Field(default=None, min_length=1)
-    """
-    The department where a work has been produced.
-    """
-    doi: Optional[str] = Field(
-        default=None,
-        examples=["10.5281/zenodo.1003150"],
-        regex="^10\\.\\d{4,9}(\\.\\d+)?/[A-Za-z0-9:/_;\\-\\.\\(\\)\\[\\]\\\\]+$",
-    )
-    """
-    The DOI of the work.
-    """
-    edition: Optional[str] = Field(default=None, min_length=1)
-    """
-    The edition of the work.
-    """
-    editors: Optional[list[Union[Person, Entity]]] = Field(
-        default=None, min_items=1, unique_items=True
-    )
-    """
-    The editor(s) of a work.
-    """
-    editors_series: Optional[list[Union[Person, Entity]]] = Field(
-        default=None, alias="editors-series", min_items=1, unique_items=True
-    )
-    """
-    The editor(s) of a series in which a work has been published.
-    """
-    end: Optional[Union[int, End]]
-    """
-    The end page of the work.
-    """
-    entry: Optional[str] = Field(default=None, min_length=1)
-    """
-    An entry in the collection that constitutes the work.
-    """
-    filename: Optional[str] = Field(default=None, min_length=1)
-    """
-    The name of the electronic file containing the work.
-    """
-    format: Optional[str] = Field(default=None, min_length=1)
-    """
-    The format in which a work is represented.
-    """
-    identifiers: Optional[
-        list[Union[Identifier1, Identifier2, Identifier3, Identifier4]]
-    ] = Field(default=None, min_items=1, unique_items=True)
-    """
-    The identifier(s) of the work.
-    """
-    institution: Optional[Entity]
-    """
-    The institution where a work has been produced or published.
-    """
-    isbn: Optional[str] = Field(default=None, regex="^[0-9\\- ]{10,17}X?$")
-    """
-    The ISBN of the work.
-    """
-    issn: Optional[str] = Field(default=None, regex="^\\d{4}-\\d{3}[\\dxX]$")
-    """
-    The ISSN of the work.
-    """
-    issue: Optional[Union[Issue, float]]
-    """
-    The issue of a periodical in which a work appeared.
-    """
-    issue_date: Optional[str] = Field(default=None, alias="issue-date", min_length=1)
-    """
-    The publication date of the issue of a periodical in which a work appeared.
-    """
-    issue_title: Optional[str] = Field(default=None, alias="issue-title", min_length=1)
-    """
-    The name of the issue of a periodical in which the work appeared.
-    """
-    journal: Optional[str] = Field(default=None, min_length=1)
-    """
-    The name of the journal/magazine/newspaper/periodical where the work was published.
-    """
-    keywords: Optional[list[str]] = Field(
-        default=None, min_items=1, min_length=1, unique_items=True
-    )
-    """
-    Keywords pertaining to the work.
-    """
-    languages: Optional[list[str]] = Field(
-        default=None,
-        max_length=3,
-        min_items=1,
-        min_length=2,
-        regex="^[a-z]{2,3}$",
-        unique_items=True,
-    )
-    """
-    The language identifier(s) of the work according to ISO 639 language strings.
-    """
-    license: Optional[Union[LicenseEnum, License1]]
-    """
-    An SPDX license identifier.
-    """
-    license_url: Optional[AnyUrl] = Field(default=None, alias="license-url")
-    """
-    The URL of the license text under which the work is licensed (only for non-standard licenses not included in the SPDX License List).
-    """
-    loc_end: Optional[Union[int, LocEnd]] = Field(default=None, alias="loc-end")
-    """
-    The line of code in the file where the work ends.
-    """
-    loc_start: Optional[Union[int, LocStart]] = Field(default=None, alias="loc-start")
-    """
-    The line of code in the file where the work starts.
-    """
-    location: Optional[Entity]
-    """
-    The location of the work.
-    """
-    medium: Optional[str] = Field(default=None, min_length=1)
-    """
-    The medium of the work.
-    """
-    month: Optional[Union[Month, Month1]]
-    """
-    The month in which a work has been published.
-    """
-    nihmsid: Optional[str] = Field(default=None, min_length=1)
-    """
-    The NIHMSID of a work.
-    """
-    notes: Optional[str] = Field(default=None, min_length=1)
-    """
-    Notes pertaining to the work.
-    """
-    number: Optional[Union[Number, float]]
-    """
-    The accession number for a work.
-    """
-    number_volumes: Optional[Union[int, NumberVolumes]] = Field(
-        default=None, alias="number-volumes"
-    )
-    """
-    The number of volumes making up the collection in which the work has been published.
-    """
-    pages: Optional[Union[int, Pages]]
-    """
-    The number of pages of the work.
-    """
-    patent_states: Optional[list[str]] = Field(
-        default=None,
-        alias="patent-states",
-        min_items=1,
-        min_length=1,
-        unique_items=True,
-    )
-    """
-    The states for which a patent is granted.
-    """
-    pmcid: Optional[str] = Field(default=None, regex="^PMC[0-9]{7}$")
-    """
-    The PMCID of a work.
-    """
-    publisher: Optional[Entity]
-    """
-    The publisher who has published the work.
-    """
-    recipients: Optional[list[Union[Entity, Person]]] = Field(
-        default=None, min_items=1, unique_items=True
-    )
-    """
-    The recipient(s) of a personal communication.
-    """
-    repository: Optional[AnyUrl]
-    """
-    The URL of the work in a repository (when the repository is neither a source code repository nor a build artifact repository).
-    """
-    repository_artifact: Optional[AnyUrl] = Field(
-        default=None, alias="repository-artifact"
-    )
-    """
-    The URL of the work in a build artifact/binary repository.
-    """
-    repository_code: Optional[AnyUrl] = Field(default=None, alias="repository-code")
-    """
-    The URL of the work in a source code repository.
-    """
-    scope: Optional[str] = Field(default=None, min_length=1)
-    """
-    The scope of the reference, e.g., the section of the work it adheres to.
-    """
-    section: Optional[Union[Section, float]]
-    """
-    The section of a work that is referenced.
-    """
-    senders: Optional[list[Union[Entity, Person]]] = Field(
-        default=None, min_items=1, unique_items=True
-    )
-    """
-    The sender(s) of a personal communication.
-    """
-    start: Optional[Union[int, Start]]
-    """
-    The start page of the work.
-    """
-    status: Optional[Status]
-    """
-    The publication status of the work.
-    """
-    term: Optional[str] = Field(default=None, min_length=1)
-    """
-    The term being referenced if the work is a dictionary or encyclopedia.
-    """
-    thesis_type: Optional[str] = Field(default=None, alias="thesis-type", min_length=1)
-    """
-    The type of the thesis that is the work.
-    """
-    title: str = Field(..., min_length=1)
-    """
-    The title of the work.
-    """
-    translators: Optional[list[Union[Entity, Person]]] = Field(
-        default=None, min_items=1, unique_items=True
-    )
-    """
-    The translator(s) of a work.
-    """
-    type: Type1
-    """
-    The type of the work.
-    """
-    url: Optional[AnyUrl]
-    """
-    The URL of the work.
-    """
-    version: Optional[Union[Version1, float]]
-    """
-    The version of the work.
-    """
-    volume: Optional[Union[int, Volume]]
-    """
-    The volume of the periodical in which a work appeared.
-    """
-    volume_title: Optional[str] = Field(
-        default=None, alias="volume-title", min_length=1
-    )
-    """
-    The title of the volume in which the work appeared.
-    """
-    year: Optional[Union[int, Year]]
-    """
-    The year in which a work has been published.
-    """
-    year_original: Optional[Union[int, YearOriginal]] = Field(
-        default=None, alias="year-original"
-    )
-    """
-    The year of the original publication.
-    """
-
-
-class Section(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The section of a work that is referenced.
-    """
-
-
-class Start(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
-    """
-    The start page of the work.
-    """
-
-
 class Status(Enum):
     abstract = "abstract"
     advance_online = "advance-online"
@@ -1618,11 +752,6 @@ class Status(Enum):
     in_press = "in-press"
     preprint = "preprint"
     submitted = "submitted"
-
-
-class Type(Enum):
-    dataset = "dataset"
-    software = "software"
 
 
 class Type1(Enum):
@@ -1675,38 +804,713 @@ class Type1(Enum):
     website = "website"
 
 
-class Version1(BaseModel):
+class Entity(BaseModel):
     class Config:
+        extra = Extra.forbid
         allow_population_by_field_name = True
 
-    __root__: str = Field(..., min_length=1)
+    address: Optional[constr(min_length=1)]
+    """
+    The entity's address.
+    """
+    alias: Optional[constr(min_length=1)]
+    """
+    The entity's alias.
+    """
+    city: Optional[constr(min_length=1)]
+    """
+    The entity's city.
+    """
+    country: Optional[Country]
+    """
+    The entity's country.
+    """
+    date_end: Optional[date] = Field(
+        default=None, alias="date-end", examples=["1900-01-01", "2020-12-31"]
+    )
+    """
+    The entity's ending date, e.g., when the entity is a conference.
+    """
+    date_start: Optional[date] = Field(
+        default=None, alias="date-start", examples=["1900-01-01", "2020-12-31"]
+    )
+    """
+    The entity's starting date, e.g., when the entity is a conference.
+    """
+    email: Optional[constr(regex=r"^[\S]+@[\S]+\.[\S]{2,}$")]
+    """
+    The entity's email address.
+    """
+    fax: Optional[constr(min_length=1)]
+    """
+    The entity's fax number.
+    """
+    location: Optional[constr(min_length=1)]
+    """
+    The entity's location, e.g., when the entity is a conference.
+    """
+    name: constr(min_length=1)
+    """
+    The entity's name.
+    """
+    orcid: Optional[AnyUrl]
+    """
+    The entity's orcid.
+    """
+    post_code: Optional[Union[constr(min_length=1), float]] = Field(
+        default=None, alias="post-code"
+    )
+    """
+    The entity's post code.
+    """
+    region: Optional[constr(min_length=1)]
+    """
+    The entity's region.
+    """
+    tel: Optional[constr(min_length=1)]
+    """
+    The entity's telephone number.
+    """
+    website: Optional[AnyUrl]
+    """
+    The entity's website.
+    """
 
 
-class Volume(BaseModel):
+class Identifier1(BaseModel):
     class Config:
+        extra = Extra.forbid
         allow_population_by_field_name = True
 
-    __root__: str = Field(..., min_length=1)
+    description: Optional[constr(min_length=1)] = Field(
+        default=None,
+        examples=[
+            "The version DOI for this version, which has a relation childOf with the concept DOI specified in the doi field in the root of this file.",
+            "The identifier provided by Archival Repository, which points to this version of the software.",
+        ],
+    )
+    """
+    A description for a specific identifier value.
+    """
+    type: Literal["doi"]
+    value: constr(
+        regex=r"^10\.\d{4,9}(\.\d+)?/[A-Za-z0-9:/_;\-\.\(\)\[\]\\]+$"
+    ) = Field(..., examples=["10.5281/zenodo.1003150"])
+    """
+    The DOI of the work (i.e., 10.5281/zenodo.1003150, not the resolver URL http://doi.org/10.5281/zenodo.1003150).
+    """
+
+
+class Identifier2(BaseModel):
+    class Config:
+        extra = Extra.forbid
+        allow_population_by_field_name = True
+
+    description: Optional[constr(min_length=1)] = Field(
+        default=None,
+        examples=[
+            "The version DOI for this version, which has a relation childOf with the concept DOI specified in the doi field in the root of this file.",
+            "The identifier provided by Archival Repository, which points to this version of the software.",
+        ],
+    )
+    """
+    A description for a specific identifier value.
+    """
+    type: Literal["url"]
+    value: AnyUrl
+
+
+class Identifier3(BaseModel):
+    class Config:
+        extra = Extra.forbid
+        allow_population_by_field_name = True
+
+    description: Optional[constr(min_length=1)] = Field(
+        default=None,
+        examples=[
+            "The version DOI for this version, which has a relation childOf with the concept DOI specified in the doi field in the root of this file.",
+            "The identifier provided by Archival Repository, which points to this version of the software.",
+        ],
+    )
+    """
+    A description for a specific identifier value.
+    """
+    type: Literal["swh"]
+    value: constr(regex=r"^swh:1:(snp|rel|rev|dir|cnt):[0-9a-fA-F]{40}$") = Field(
+        ...,
+        examples=[
+            "swh:1:cnt:94a9ed024d3859793618152ea559a168bbcbb5e2",
+            "swh:1:dir:d198bc9d7a6bcf6db04f476d29314f157507d505",
+            "swh:1:rev:309cf2674ee7a0749978cf8265ab91a60aea0f7d",
+            "swh:1:rel:22ece559cc7cc2364edc5e5593d63ae8bd229f9f",
+            "swh:1:snp:c7c108084bc0bf3d81436bf980b46e98bd338453",
+        ],
+    )
+    """
+    The Software Heritage identifier (without further qualifiers such as origin, visit, anchor, path).
+    """
+
+
+class Identifier4(BaseModel):
+    class Config:
+        extra = Extra.forbid
+        allow_population_by_field_name = True
+
+    description: Optional[constr(min_length=1)] = Field(
+        default=None,
+        examples=[
+            "The version DOI for this version, which has a relation childOf with the concept DOI specified in the doi field in the root of this file.",
+            "The identifier provided by Archival Repository, which points to this version of the software.",
+        ],
+    )
+    """
+    A description for a specific identifier value.
+    """
+    type: Literal["other"]
+    value: constr(min_length=1)
+
+
+class Person(BaseModel):
+    class Config:
+        extra = Extra.forbid
+        allow_population_by_field_name = True
+
+    address: Optional[constr(min_length=1)]
+    """
+    The person's address.
+    """
+    affiliation: Optional[constr(min_length=1)]
+    """
+    The person's affilitation.
+    """
+    alias: Optional[constr(min_length=1)]
+    """
+    The person's alias.
+    """
+    city: Optional[constr(min_length=1)]
+    """
+    The person's city.
+    """
+    country: Optional[Country]
+    """
+    The person's country.
+    """
+    email: Optional[constr(regex=r"^[\S]+@[\S]+\.[\S]{2,}$")]
+    """
+    The person's email address.
+    """
+    family_names: Optional[constr(min_length=1)] = Field(
+        default=None, alias="family-names"
+    )
+    """
+    The person's family names.
+    """
+    fax: Optional[constr(min_length=1)]
+    """
+    The person's fax number.
+    """
+    given_names: Optional[constr(min_length=1)] = Field(
+        default=None, alias="given-names"
+    )
+    """
+    The person's given names.
+    """
+    name_particle: Optional[constr(min_length=1)] = Field(
+        default=None, alias="name-particle", examples=["von"]
+    )
+    """
+    The person's name particle, e.g., a nobiliary particle or a preposition meaning 'of' or 'from' (for example 'von' in 'Alexander von Humboldt').
+    """
+    name_suffix: Optional[constr(min_length=1)] = Field(
+        default=None, alias="name-suffix", examples=["Jr.", "III"]
+    )
+    """
+    The person's name-suffix, e.g. 'Jr.' for Sammy Davis Jr. or 'III' for Frank Edwin Wright III.
+    """
+    orcid: Optional[AnyUrl]
+    """
+    The person's ORCID.
+    """
+    post_code: Optional[Union[constr(min_length=1), float]] = Field(
+        default=None, alias="post-code"
+    )
+    """
+    The person's post-code.
+    """
+    region: Optional[constr(min_length=1)]
+    """
+    The person's region.
+    """
+    tel: Optional[constr(min_length=1)]
+    """
+    The person's phone number.
+    """
+    website: Optional[AnyUrl]
+    """
+    The person's website.
+    """
+
+
+class Reference(BaseModel):
+    class Config:
+        extra = Extra.forbid
+        allow_population_by_field_name = True
+
+    abbreviation: Optional[constr(min_length=1)]
+    """
+    The abbreviation of a work.
+    """
+    abstract: Optional[constr(min_length=1)]
+    """
+    The abstract of a work.
+    """
+    authors: List[Union[Person, Entity]] = Field(..., min_items=1, unique_items=True)
+    """
+    The author(s) of a work.
+    """
+    collection_doi: Optional[
+        constr(regex=r"^10\.\d{4,9}(\.\d+)?/[A-Za-z0-9:/_;\-\.\(\)\[\]\\]+$")
+    ] = Field(default=None, alias="collection-doi", examples=["10.5281/zenodo.1003150"])
+    """
+    The DOI of a collection containing the work.
+    """
+    collection_title: Optional[constr(min_length=1)] = Field(
+        default=None, alias="collection-title"
+    )
+    """
+    The title of a collection or proceedings.
+    """
+    collection_type: Optional[constr(min_length=1)] = Field(
+        default=None, alias="collection-type"
+    )
+    """
+    The type of a collection.
+    """
+    commit: Optional[constr(min_length=1)]
+    """
+    The (e.g., Git) commit hash or (e.g., Subversion) revision number of the work.
+    """
+    conference: Optional[Entity]
+    """
+    The conference where the work was presented.
+    """
+    contact: Optional[List[Union[Person, Entity]]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    The contact person, group, company, etc. for a work.
+    """
+    copyright: Optional[constr(min_length=1)]
+    """
+    The copyright information pertaining to the work.
+    """
+    data_type: Optional[constr(min_length=1)] = Field(default=None, alias="data-type")
+    """
+    The data type of a data set.
+    """
+    database: Optional[constr(min_length=1)]
+    """
+    The name of the database where a work was accessed/is stored.
+    """
+    database_provider: Optional[Entity] = Field(default=None, alias="database-provider")
+    """
+    The provider of the database where a work was accessed/is stored.
+    """
+    date_accessed: Optional[date] = Field(
+        default=None, alias="date-accessed", examples=["1900-01-01", "2020-12-31"]
+    )
+    """
+    The date the work was accessed.
+    """
+    date_downloaded: Optional[date] = Field(
+        default=None, alias="date-downloaded", examples=["1900-01-01", "2020-12-31"]
+    )
+    """
+    The date the work has been downloaded.
+    """
+    date_published: Optional[date] = Field(
+        default=None, alias="date-published", examples=["1900-01-01", "2020-12-31"]
+    )
+    """
+    The date the work has been published.
+    """
+    date_released: Optional[date] = Field(
+        default=None, alias="date-released", examples=["1900-01-01", "2020-12-31"]
+    )
+    """
+    The date the work has been released.
+    """
+    department: Optional[constr(min_length=1)]
+    """
+    The department where a work has been produced.
+    """
+    doi: Optional[
+        constr(regex=r"^10\.\d{4,9}(\.\d+)?/[A-Za-z0-9:/_;\-\.\(\)\[\]\\]+$")
+    ] = Field(default=None, examples=["10.5281/zenodo.1003150"])
+    """
+    The DOI of the work.
+    """
+    edition: Optional[constr(min_length=1)]
+    """
+    The edition of the work.
+    """
+    editors: Optional[List[Union[Person, Entity]]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    The editor(s) of a work.
+    """
+    editors_series: Optional[List[Union[Person, Entity]]] = Field(
+        default=None, alias="editors-series", min_items=1, unique_items=True
+    )
+    """
+    The editor(s) of a series in which a work has been published.
+    """
+    end: Optional[Union[int, constr(min_length=1)]]
+    """
+    The end page of the work.
+    """
+    entry: Optional[constr(min_length=1)]
+    """
+    An entry in the collection that constitutes the work.
+    """
+    filename: Optional[constr(min_length=1)]
+    """
+    The name of the electronic file containing the work.
+    """
+    format: Optional[constr(min_length=1)]
+    """
+    The format in which a work is represented.
+    """
+    identifiers: Optional[
+        List[Union[Identifier1, Identifier2, Identifier3, Identifier4]]
+    ] = Field(default=None, min_items=1, unique_items=True)
+    """
+    The identifier(s) of the work.
+    """
+    institution: Optional[Entity]
+    """
+    The institution where a work has been produced or published.
+    """
+    isbn: Optional[constr(regex=r"^[0-9\- ]{10,17}X?$")]
+    """
+    The ISBN of the work.
+    """
+    issn: Optional[constr(regex=r"^\d{4}-\d{3}[\dxX]$")]
+    """
+    The ISSN of the work.
+    """
+    issue: Optional[Union[constr(min_length=1), float]]
+    """
+    The issue of a periodical in which a work appeared.
+    """
+    issue_date: Optional[constr(min_length=1)] = Field(default=None, alias="issue-date")
+    """
+    The publication date of the issue of a periodical in which a work appeared.
+    """
+    issue_title: Optional[constr(min_length=1)] = Field(
+        default=None, alias="issue-title"
+    )
+    """
+    The name of the issue of a periodical in which the work appeared.
+    """
+    journal: Optional[constr(min_length=1)]
+    """
+    The name of the journal/magazine/newspaper/periodical where the work was published.
+    """
+    keywords: Optional[List[constr(min_length=1)]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    Keywords pertaining to the work.
+    """
+    languages: Optional[
+        List[constr(regex=r"^[a-z]{2,3}$", min_length=2, max_length=3)]
+    ] = Field(default=None, min_items=1, unique_items=True)
+    """
+    The language identifier(s) of the work according to ISO 639 language strings.
+    """
+    license: Optional[Union[LicenseEnum, List[LicenseEnum]]]
+    """
+    An SPDX license identifier.
+    """
+    license_url: Optional[AnyUrl] = Field(default=None, alias="license-url")
+    """
+    The URL of the license text under which the work is licensed (only for non-standard licenses not included in the SPDX License List).
+    """
+    loc_end: Optional[Union[int, constr(min_length=1)]] = Field(
+        default=None, alias="loc-end"
+    )
+    """
+    The line of code in the file where the work ends.
+    """
+    loc_start: Optional[Union[int, constr(min_length=1)]] = Field(
+        default=None, alias="loc-start"
+    )
+    """
+    The line of code in the file where the work starts.
+    """
+    location: Optional[Entity]
+    """
+    The location of the work.
+    """
+    medium: Optional[constr(min_length=1)]
+    """
+    The medium of the work.
+    """
+    month: Optional[Union[conint(ge=1, le=12), Month]]
+    """
+    The month in which a work has been published.
+    """
+    nihmsid: Optional[constr(min_length=1)]
+    """
+    The NIHMSID of a work.
+    """
+    notes: Optional[constr(min_length=1)]
+    """
+    Notes pertaining to the work.
+    """
+    number: Optional[Union[constr(min_length=1), float]]
+    """
+    The accession number for a work.
+    """
+    number_volumes: Optional[Union[int, constr(min_length=1)]] = Field(
+        default=None, alias="number-volumes"
+    )
+    """
+    The number of volumes making up the collection in which the work has been published.
+    """
+    pages: Optional[Union[int, constr(min_length=1)]]
+    """
+    The number of pages of the work.
+    """
+    patent_states: Optional[List[constr(min_length=1)]] = Field(
+        default=None, alias="patent-states", min_items=1, unique_items=True
+    )
+    """
+    The states for which a patent is granted.
+    """
+    pmcid: Optional[constr(regex=r"^PMC[0-9]{7}$")]
+    """
+    The PMCID of a work.
+    """
+    publisher: Optional[Entity]
+    """
+    The publisher who has published the work.
+    """
+    recipients: Optional[List[Union[Entity, Person]]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    The recipient(s) of a personal communication.
+    """
+    repository: Optional[AnyUrl]
+    """
+    The URL of the work in a repository (when the repository is neither a source code repository nor a build artifact repository).
+    """
+    repository_artifact: Optional[AnyUrl] = Field(
+        default=None, alias="repository-artifact"
+    )
+    """
+    The URL of the work in a build artifact/binary repository.
+    """
+    repository_code: Optional[AnyUrl] = Field(default=None, alias="repository-code")
+    """
+    The URL of the work in a source code repository.
+    """
+    scope: Optional[constr(min_length=1)]
+    """
+    The scope of the reference, e.g., the section of the work it adheres to.
+    """
+    section: Optional[Union[constr(min_length=1), float]]
+    """
+    The section of a work that is referenced.
+    """
+    senders: Optional[List[Union[Entity, Person]]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    The sender(s) of a personal communication.
+    """
+    start: Optional[Union[int, constr(min_length=1)]]
+    """
+    The start page of the work.
+    """
+    status: Optional[Status]
+    """
+    The publication status of the work.
+    """
+    term: Optional[constr(min_length=1)]
+    """
+    The term being referenced if the work is a dictionary or encyclopedia.
+    """
+    thesis_type: Optional[constr(min_length=1)] = Field(
+        default=None, alias="thesis-type"
+    )
+    """
+    The type of the thesis that is the work.
+    """
+    title: constr(min_length=1)
+    """
+    The title of the work.
+    """
+    translators: Optional[List[Union[Entity, Person]]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    The translator(s) of a work.
+    """
+    type: Type1
+    """
+    The type of the work.
+    """
+    url: Optional[AnyUrl]
+    """
+    The URL of the work.
+    """
+    version: Optional[Union[constr(min_length=1), float]]
+    """
+    The version of the work.
+    """
+    volume: Optional[Union[int, constr(min_length=1)]]
     """
     The volume of the periodical in which a work appeared.
     """
-
-
-class Year(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
+    volume_title: Optional[constr(min_length=1)] = Field(
+        default=None, alias="volume-title"
+    )
+    """
+    The title of the volume in which the work appeared.
+    """
+    year: Optional[Union[int, constr(min_length=1)]]
     """
     The year in which a work has been published.
     """
-
-
-class YearOriginal(BaseModel):
-    class Config:
-        allow_population_by_field_name = True
-
-    __root__: str = Field(..., min_length=1)
+    year_original: Optional[Union[int, constr(min_length=1)]] = Field(
+        default=None, alias="year-original"
+    )
     """
     The year of the original publication.
+    """
+
+
+class CitationFileFormat(ByAliasExcludeNoneMixin, BaseModel):
+    class Config:
+        extra = Extra.forbid
+        allow_population_by_field_name = True
+
+    abstract: Optional[constr(min_length=1)]
+    """
+    A description of the software or dataset.
+    """
+    authors: List[Union[Person, Entity]] = Field(..., min_items=1, unique_items=True)
+    """
+    The author(s) of the software or dataset.
+    """
+    cff_version: constr(regex=r"^1\.2\.0$") = Field(
+        ..., alias="cff-version", examples=["1.2.0"]
+    )
+    """
+    The version of CFF used for providing the citation metadata.
+    """
+    commit: Optional[constr(min_length=1)]
+    """
+    The (e.g., Git) commit hash or (e.g., Subversion) revision number of the work.
+    """
+    contact: Optional[List[Union[Person, Entity]]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    The contact person, group, company, etc. for the software or dataset.
+    """
+    date_released: Optional[date] = Field(
+        default=None, alias="date-released", examples=["1900-01-01", "2020-12-31"]
+    )
+    """
+    The date the work has been released.
+    """
+    doi: Optional[
+        constr(regex=r"^10\.\d{4,9}(\.\d+)?/[A-Za-z0-9:/_;\-\.\(\)\[\]\\]+$")
+    ] = Field(default=None, examples=["10.5281/zenodo.1003150"])
+    """
+    The DOI of the work (i.e., 10.5281/zenodo.1003150, not the resolver URL http://doi.org/10.5281/zenodo.1003150).
+    """
+    identifiers: Optional[
+        List[Union[Identifier1, Identifier2, Identifier3, Identifier4]]
+    ] = Field(default=None, min_items=1, unique_items=True)
+    """
+    The identifiers of the software or dataset.
+    """
+    keywords: Optional[List[constr(min_length=1)]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    Keywords that describe the work.
+    """
+    license: Optional[Union[LicenseEnum, List[LicenseEnum]]]
+    """
+    An SPDX license identifier.
+    """
+    license_url: Optional[AnyUrl] = Field(default=None, alias="license-url")
+    """
+    The URL of the license text under which the software or dataset is licensed (only for non-standard licenses not included in the SPDX License List).
+    """
+    message: constr(min_length=1) = Field(
+        ...,
+        examples=[
+            "If you use this software, please cite it using the metadata from this file.",
+            "Please cite this software using these metadata.",
+            "Please cite this software using the metadata from 'preferred-citation'.",
+        ],
+    )
+    """
+    A message to the human reader of the file to let them know what to do with the citation metadata.
+    """
+    preferred_citation: Optional[Reference] = Field(
+        default=None, alias="preferred-citation"
+    )
+    """
+    A reference to another work that should be cited instead of the software or dataset itself.
+    """
+    references: Optional[List[Reference]] = Field(
+        default=None, min_items=1, unique_items=True
+    )
+    """
+    Reference(s) to other creative works.
+    """
+    repository: Optional[AnyUrl] = Field(
+        default=None,
+        examples=[
+            "https://edoc.hu-berlin.de/handle/18452/23016",
+            "https://ascl.net/2105.013",
+        ],
+    )
+    """
+    The URL of the software or dataset in a repository (when the repository is neither a source code repository nor a build artifact repository).
+    """
+    repository_artifact: Optional[AnyUrl] = Field(
+        default=None, alias="repository-artifact"
+    )
+    """
+    The URL of the software in a build artifact/binary repository.
+    """
+    repository_code: Optional[AnyUrl] = Field(default=None, alias="repository-code")
+    """
+    The URL of the software or dataset in a source code repository.
+    """
+    title: constr(min_length=1)
+    """
+    The name of the software or dataset.
+    """
+    type: Optional[Type] = "software"
+    """
+    The type of the work.
+    """
+    url: Optional[AnyUrl]
+    """
+    The URL of a landing page/website for the software or dataset.
+    """
+    version: Optional[Union[constr(min_length=1), float]]
+    """
+    The version of the software or dataset.
     """
