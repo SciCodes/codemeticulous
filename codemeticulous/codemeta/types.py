@@ -48,6 +48,7 @@ from pydantic2_schemaorg.Conversation import Conversation
 from pydantic2_schemaorg.CorrectionComment import CorrectionComment
 from pydantic2_schemaorg.Course import Course
 from pydantic2_schemaorg.CoverArt import CoverArt
+from pydantic2_schemaorg.CreativeWork import CreativeWork
 from pydantic2_schemaorg.CreativeWorkSeason import CreativeWorkSeason
 from pydantic2_schemaorg.CreativeWorkSeries import CreativeWorkSeries
 from pydantic2_schemaorg.CriticReview import CriticReview
@@ -209,6 +210,7 @@ SoftwareApplicationType = Union[
 ]
 
 CreativeWorkType = Union[
+    CreativeWork,
     # every MediaObject and SoftwareApplication is a CreativeWork
     MediaObjectType,
     SoftwareApplicationType,
