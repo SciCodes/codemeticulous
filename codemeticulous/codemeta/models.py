@@ -21,6 +21,12 @@ from codemeticulous.common.utils import map_dict_keys
 from codemeticulous.common.mixins import ByAliasExcludeNoneMixin
 
 
+class VersionedLanguage(ComputerLanguage):
+    """extends ComputerLanguage to allow for additional fields"""
+
+    version: Optional[str]
+
+
 class FlexibleRole(Role):
     """extends Role to allow for additional fields
 
@@ -64,11 +70,14 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
 
     context: Any = Field(default="https://w3id.org/codemeta/3.0", alias="@context")
     type_: str = Field(default="SoftwareSourceCode", alias="@type")
+    id_: Optional[str] = Field(alias="@id")
 
     name: str
 
     codeRepository: Optional[AnyUrl]
-    programmingLanguage: Optional[ComputerLanguage | str | list[ComputerLanguage | str]]
+    programmingLanguage: Optional[
+        VersionedLanguage | str | list[VersionedLanguage | str]
+    ]
     runtimePlatform: Optional[str | list[str]]
     targetProduct: Optional[list[SoftwareApplication | str] | SoftwareApplication | str]
     applicationCategory: Optional[TextOrUrlListOrSingle]
@@ -103,7 +112,7 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     license: Optional[list[CreativeWork | AnyUrl] | CreativeWork | AnyUrl]
     producer: Optional[ActorListOrSingle]
     provider: Optional[ActorListOrSingle]
-    publisher: Optional[ActorListOrSingle]
+    publisher: Optional[ActorListOrSingle | list[str] | str]
     sponsor: Optional[ActorListOrSingle]
     version: Optional[list[int | float | str] | int | float | str]
     isAccessibleForFree: Optional[bool]
@@ -198,6 +207,22 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
         return map_dict_keys(values, {"type": "@type", "id": "@id"})
 
     @root_validator(pre=True)
+    def collapse_jsonld_context(cls, values):
+        # everything should be within the codemeta context, so we flatten the @context
+        # and remove jsonld prefixes
+        context = values.get("@context")
+        if isinstance(context, dict):
+            prefixes = list(context.keys())
+            for key in list(values.keys()):
+                for prefix in prefixes:
+                    if key.startswith(f"{prefix}:"):
+                        values[key.replace(f"{prefix}:", "")] = values.pop(key)
+                        break
+        # always remove @context so it gets set to the default codemeta v3 context
+        values.pop("@context")
+        return values
+
+    @root_validator(pre=True)
     def coalesce_embargo_end_date(cls, values):
         embargo_date = values.get("embargoDate")
         embargo_end_date = values.get("embargoEndDate")
@@ -246,7 +271,7 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
 
         e.g. { "@type": "Blog" , ... } should be validated as a Blog object
         which is a sub-type of CreativeWork
-        
+
         This is necessary because pydantic does not support 'automatic' polymorphism
         like this, and creating massive union types for every possible sub-type is
         extremely innefficient as opposed to the dynamic importing done here
@@ -268,5 +293,4 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
             raise ValueError(f"Invalid type for {base_class.__name__}")
 
     class Config:
-        # type can be "type" or "@type"
         allow_population_by_field_name = True
