@@ -14,7 +14,6 @@ from codemeticulous.codemeta.models import (
     CodeMeta,
     Actor as CodeMetaActor,
     ActorListOrSingle as CodeMetaActorListOrSingle,
-    CreativeWorkType as CodeMetaCreativeWorkType,
 )
 from codemeticulous.common.utils import (
     get_first_if_single_list,
@@ -214,7 +213,7 @@ def codemeta_license_to_cff(codemeta_license) -> tuple[list[str], list[str]]:
     spdx_url_pattern = re.compile(r"https://spdx\.org/licenses/([A-Za-z0-9\-_\.]+)")
     spdx_ids = {l.value for l in LicenseEnum}
     for l in licenses:
-        license_str = l.name if isinstance(l, CodeMetaCreativeWorkType) else l
+        license_str = l if isinstance(l, str) else l.name
         if isinstance(license_str, str):
             match = spdx_url_pattern.match(license_str)
             spdx_id = match.group(1) if match else license_str

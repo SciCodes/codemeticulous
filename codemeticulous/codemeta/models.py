@@ -13,12 +13,10 @@ from pydantic2_schemaorg.ScholarlyArticle import ScholarlyArticle
 from pydantic2_schemaorg.Review import Review
 from pydantic2_schemaorg.PropertyValue import PropertyValue
 from pydantic2_schemaorg.Role import Role
+from pydantic2_schemaorg.CreativeWork import CreativeWork
+from pydantic2_schemaorg.MediaObject import MediaObject
+from pydantic2_schemaorg.SoftwareApplication import SoftwareApplication
 
-from codemeticulous.codemeta.types import (
-    CreativeWorkType,
-    MediaObjectType,
-    SoftwareApplicationType,
-)
 from codemeticulous.common.utils import map_dict_keys
 from codemeticulous.common.mixins import ByAliasExcludeNoneMixin
 
@@ -53,9 +51,10 @@ TextOrUrl = str | AnyUrl
 TextOrUrlList = list[TextOrUrl]
 TextOrUrlListOrSingle = TextOrUrl | TextOrUrlList
 
-Software = SoftwareSourceCode | SoftwareApplicationType | str | AnyUrl
+Software = SoftwareSourceCode | SoftwareApplication | str | AnyUrl
 SoftwareList = list[Software]
 SoftwareListOrSingle = Software | SoftwareList
+
 
 class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     """CodeMeta v3 schema (supports v2 fields aliased to v3)
@@ -71,9 +70,7 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     codeRepository: Optional[AnyUrl]
     programmingLanguage: Optional[ComputerLanguage | str | list[ComputerLanguage | str]]
     runtimePlatform: Optional[str | list[str]]
-    targetProduct: Optional[
-        list[SoftwareApplicationType | str] | SoftwareApplicationType | str
-    ]
+    targetProduct: Optional[list[SoftwareApplication | str] | SoftwareApplication | str]
     applicationCategory: Optional[TextOrUrlListOrSingle]
     applicationSubCategory: Optional[TextOrUrlListOrSingle]
     downloadUrl: Optional[list[AnyUrl] | AnyUrl]
@@ -84,15 +81,13 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     permissions: Optional[list[str] | str]
     processorRequirements: Optional[list[str] | str]
     releaseNotes: Optional[TextOrUrlListOrSingle]
-    softwareHelp: Optional[list[CreativeWorkType] | CreativeWorkType]
-    softwareRequirements: Optional[
-        SoftwareListOrSingle
-    ]
+    softwareHelp: Optional[list[CreativeWork] | CreativeWork]
+    softwareRequirements: Optional[SoftwareListOrSingle]
     softwareVersion: Optional[str]
     storageRequirements: Optional[TextOrUrlListOrSingle]
     supportingData: Optional[list[DataFeed] | DataFeed]
     author: Optional[ActorListOrSingle]
-    citation: Optional[list[CreativeWorkType | AnyUrl] | CreativeWorkType | AnyUrl]
+    citation: Optional[list[CreativeWork | AnyUrl] | CreativeWork | AnyUrl]
     contributor: Optional[ActorListOrSingle]
     copyrightHolder: Optional[ActorListOrSingle]
     copyrightYear: Optional[list[int] | int]
@@ -101,19 +96,19 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     dateModified: Optional[date | datetime]
     datePublished: Optional[date | datetime]
     editor: Optional[list[Person] | Person]
-    encoding: Optional[list[MediaObjectType] | MediaObjectType]
+    encoding: Optional[list[MediaObject] | MediaObject]
     fileFormat: Optional[TextOrUrlListOrSingle]
     funder: Optional[ActorListOrSingle]
     keywords: Optional[list[str] | str]
-    license: Optional[list[CreativeWorkType | AnyUrl] | CreativeWorkType | AnyUrl]
+    license: Optional[list[CreativeWork | AnyUrl] | CreativeWork | AnyUrl]
     producer: Optional[ActorListOrSingle]
     provider: Optional[ActorListOrSingle]
     publisher: Optional[ActorListOrSingle]
     sponsor: Optional[ActorListOrSingle]
     version: Optional[list[int | float | str] | int | float | str]
     isAccessibleForFree: Optional[bool]
-    isPartOf: Optional[list[CreativeWorkType] | CreativeWorkType]
-    hasPart: Optional[list[CreativeWorkType] | CreativeWorkType]
+    isPartOf: Optional[list[CreativeWork] | CreativeWork]
+    hasPart: Optional[list[CreativeWork] | CreativeWork]
     position: Optional[list[int | str] | int | str]
     identifier: Optional[
         list[PropertyValue | str | AnyUrl] | PropertyValue | str | AnyUrl
@@ -126,18 +121,11 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
 
     # CodeMeta-specific terms
     # these are more loosely defined than the schema.org/SoftwareSourceCode properties above
-    hasSourceCode: Optional[
-        SoftwareListOrSingle
-    ]
+    hasSourceCode: Optional[SoftwareListOrSingle]
     isSourceCodeOf: Optional[
-        list[SoftwareApplicationType | str | AnyUrl]
-        | SoftwareApplicationType
-        | str
-        | AnyUrl
+        list[SoftwareApplication | str | AnyUrl] | SoftwareApplication | str | AnyUrl
     ]
-    softwareSuggestions: Optional[
-        SoftwareListOrSingle
-    ]
+    softwareSuggestions: Optional[SoftwareListOrSingle]
     maintainer: Optional[ActorListOrSingle]
     contIntegration: Optional[list[AnyUrl] | AnyUrl]
     continuousIntegration: Optional[list[AnyUrl] | AnyUrl]
@@ -159,6 +147,49 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
                 "@type must be 'SoftwareSourceCode' or 'SoftwareApplication'"
             )
         return v
+
+    @validator(
+        "softwareHelp",
+        "citation",
+        "license",
+        "isPartOf",
+        "hasPart",
+        pre=True,
+        each_item=True,
+    )
+    def validate_creative_work(cls, v):
+        if v is None:
+            return v
+        elif isinstance(v, list):
+            return [cls.validate_sub_type(item, CreativeWork) for item in v]
+        else:
+            return cls.validate_sub_type(v, CreativeWork)
+
+    @validator("encoding", pre=True, each_item=True)
+    def validate_media_object(cls, v):
+        if v is None:
+            return v
+        elif isinstance(v, list):
+            return [cls.validate_sub_type(item, MediaObject) for item in v]
+        else:
+            return cls.validate_sub_type(v, MediaObject)
+
+    @validator(
+        "targetProduct",
+        "softwareRequirements",
+        "hasSourceCode",
+        "isSourceCodeOf",
+        "softwareSuggestions",
+        pre=True,
+        each_item=True,
+    )
+    def validate_software_application(cls, v):
+        if v is None:
+            return v
+        elif isinstance(v, list):
+            return [cls.validate_sub_type(item, SoftwareApplication) for item in v]
+        else:
+            return cls.validate_sub_type(v, SoftwareApplication)
 
     @root_validator(pre=True)
     def map_type_and_id(cls, values):
@@ -207,6 +238,34 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
             values["author"] = creator
             del values["creator"]
         return values
+
+    @classmethod
+    def validate_sub_type(cls, value, base_class):
+        """Ensure that the value is a sub-type of the given base_class using
+        the "@type" field as a discriminator.
+
+        e.g. { "@type": "Blog" , ... } should be validated as a Blog object
+        which is a sub-type of CreativeWork
+        
+        This is necessary because pydantic does not support 'automatic' polymorphism
+        like this, and creating massive union types for every possible sub-type is
+        extremely innefficient as opposed to the dynamic importing done here
+        """
+        if isinstance(value, dict):
+            type_ = value.get("@type") or value.get("type") or base_class.__name__
+            try:
+                module_name = f"pydantic2_schemaorg.{type_}"
+                module = __import__(module_name, fromlist=[type_])
+                ModelClass = getattr(module, type_)
+                if not issubclass(ModelClass, base_class):
+                    raise TypeError(f"{type_} is not a sub-type of {base_class}")
+                return ModelClass(**value)
+            except ImportError:
+                return base_class(**value)
+        elif isinstance(value, (str, AnyUrl)):
+            return value
+        else:
+            raise ValueError(f"Invalid type for {base_class.__name__}")
 
     class Config:
         # type can be "type" or "@type"
