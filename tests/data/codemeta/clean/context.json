@@ -1,0 +1,12 @@
+{
+  "@context": {
+    "schema": "http://schema.org/",
+    "codemeta": "https://w3id.org/codemeta/3.0"
+  },
+  "schema:name": "Example Software",
+  "codemeta:author": {
+    "@type": "Person",
+    "name": "Jane Doe"
+  },
+  "type": "SoftwareSourceCode"
+}

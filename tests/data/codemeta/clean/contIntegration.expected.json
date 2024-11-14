@@ -1,0 +1,6 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "Software that uses CI",
+  "continuousIntegration": "https://app.travis-ci.com/some/app"
+}

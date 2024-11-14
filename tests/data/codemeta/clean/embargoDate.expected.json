@@ -1,0 +1,6 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "Embargoed Software",
+  "embargoEndDate": "2023-12-31"
+}
