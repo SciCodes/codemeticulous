@@ -6,10 +6,12 @@ from typing import Any, Literal
 
 from codemeticulous.codemeta.models import CodeMeta
 from codemeticulous.cff.models import CitationFileFormat
+from codemeticulous.datacite.models import DataciteV45
 
 MODEL_MAP: dict[str, Any] = {
     "codemeta": CodeMeta,
     "cff": CitationFileFormat,
+    "datacite": DataciteV45,
 }
 
 
