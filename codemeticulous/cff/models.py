@@ -13,7 +13,7 @@ with options:
 MANUAL CHANGES:
 - add ByAliasExcludeNoneMixin to CitationFileFormat
 - do not set a default CitationFileFormat.type
-- remove YYYY-MM-DD patterns from date fields
+- remove patterns from all non-str fields
 """
 
 from __future__ import annotations
@@ -1415,9 +1415,7 @@ class Reference(BaseModel):
     """
     Keywords pertaining to the work.
     """
-    languages: Optional[List[str]] = Field(
-        default=None, max_length=3, min_length=1, pattern="^[a-z]{2,3}$"
-    )
+    languages: Optional[List[str]] = Field(default=None, max_length=3, min_length=1)
     """
     The language identifier(s) of the work according to ISO 639 language strings.
     """
