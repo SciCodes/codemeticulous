@@ -5,20 +5,14 @@
 
 # generate models
 datamodel-codegen --input "$1" --output "$2/model.gen.py" \
-    --output-model-type pydantic.BaseModel \
+    --output-model-type pydantic_v2.BaseModel \
+    --field-constraints \
     --allow-population-by-field-name \
     --collapse-root-models \
     --use-default-kwarg \
-    --strip-default-none \
     --enum-field-as-literal one \
     --use-field-description \
     --disable-timestamp
-# FIXME: this has an option to switch from 'forbid' extra fields to 'allow', but not
-# the default of 'ignore', which is preferable?
-
-# replace "from pydantic import ..." with "from pydantic.v1 import ..."
-sed -i 's/from pydantic import/from pydantic.v1 import/g' "$2/model.gen.py"
-# TODO: CitationFileFormat(BaseModel) needs to inherit from common.mixins.ByAliasExcludeNoneMixin
 
 # run formatter
 black "$2/model.gen.py"

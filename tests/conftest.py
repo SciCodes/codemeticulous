@@ -2,7 +2,7 @@ import pytest
 import json
 import yaml
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from codemeticulous.codemeta.models import CodeMeta
 from codemeticulous.cff.models import CitationFileFormat
@@ -18,12 +18,12 @@ def test_data_dir() -> Path:
     return Path(__file__).parent / "data"
 
 
-def load_file(file_path: Path) -> Any:
+def load_file(file_path: Path) -> tuple[Any, Literal["json", "yaml"]]:
     with open(file_path, "r", encoding="utf-8") as f:
         if file_path.suffix in [".json", ".expected"]:
-            return json.load(f)
+            return json.load(f), "json"
         elif file_path.suffix in [".yml", ".yaml", ".cff"]:
-            return yaml.safe_load(f)
+            return yaml.safe_load(f), "yaml"
         else:
             raise ValueError(f"Unsupported file format: {file_path.suffix}")
 
@@ -43,7 +43,7 @@ def load_model_data():
         model_class = MODEL_MAP.get(model_name)
         if model_class is None:
             raise ValueError(f"Model '{model_name}' is not defined in MODEL_MAP.")
-        data = load_file(file_path)
-        return model_class, data
+        data, file_type = load_file(file_path)
+        return model_class, data, file_type
 
     return _load

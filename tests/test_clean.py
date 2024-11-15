@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import yaml
+
 from .conftest import MODEL_MAP, discover_test_files, load_file
 
 
@@ -30,8 +32,14 @@ def pytest_generate_tests(metafunc):
 
 def test_clean(clean_test_case, load_model_data):
     model_name, input_file, expected_file = clean_test_case
-    model_class, input_data = load_model_data(model_name, input_file)
-    expected_data = load_file(expected_file)
+    model_class, input_data, _ = load_model_data(model_name, input_file)
+    expected_data, expected_data_type = load_file(expected_file)
     model_instance = model_class(**input_data)
-    serialized_data = json.loads(model_instance.json())
+    # if the file type is json, compare with the json representation,
+    if expected_data_type == "json":
+        serialized_data = json.loads(model_instance.json())
+    # if the file type is yaml, compare with the yaml representation,
+    # mostly for the yaml dates
+    elif expected_data_type == "yaml":
+        serialized_data = yaml.safe_load(model_instance.yaml())
     assert serialized_data == expected_data

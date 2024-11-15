@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from urllib.parse import urlparse
 
 
@@ -46,3 +47,20 @@ def is_url(url: str) -> bool:
         return all([result.scheme, result.netloc])
     except ValueError:
         return False
+
+
+def parse_dict_dates(obj):
+    """recursively convert date and datetime objects to ISO format strings"""
+    if isinstance(obj, dict):
+        return {k: parse_dict_dates(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [parse_dict_dates(v) for v in obj]
+    elif isinstance(obj, str):
+        try:
+            if "T" in obj:  # possibly a datetime
+                return datetime.fromisoformat(obj)
+            else:  # possibly a date
+                return date.fromisoformat(obj)
+        except ValueError:
+            pass  # not a date
+    return obj

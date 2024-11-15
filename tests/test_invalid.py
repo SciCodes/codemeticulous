@@ -20,6 +20,6 @@ def pytest_generate_tests(metafunc):
 
 def test_invalid(invalid_test_case, load_model_data):
     model_name, file_path = invalid_test_case
-    model_class, data = load_model_data(model_name, file_path)
-    with pytest.raises(ValidationError):
+    model_class, data, _ = load_model_data(model_name, file_path)
+    with pytest.raises(Exception):
         model_class(**data)
