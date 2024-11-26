@@ -1,4 +1,4 @@
-Currently, CodeMeta is used as a central "hub" representation of software metadata as it is the most exhaustive, and provides [crosswalk definitions](https://codemeta.github.io/crosswalk/) between other formats. This is done in order to avoid: 1. the need for a bridge between every format, and 2. the creation of <a href="https://xkcd.com/927/" title="You know where this link goes.">another standard</a>.
+Currently, CodeMeta is used as a central "hub" representation of software metadata as it is the most exhaustive, and provides [crosswalk definitions](https://codemeta.github.io/crosswalk/) between other formats. This is done in order to avoid the need for a bridge between every format, though custom conversion logic can be implemented for any 'crosswalk'
 
 <table><thead>
   <tr>
@@ -24,7 +24,7 @@ Currently, CodeMeta is used as a central "hub" representation of software metada
     <td><a href="https://schema.datacite.org/">Datacite</a></td>
     <td><a href="https://datacite-metadata-schema.readthedocs.io/en/4.5/"><code>v4.5</code></a><br></td>
     <td>✅</td>
-    <td></td>
+    <td>✅</td>
     <td></td>
   </tr>
   <tr>
