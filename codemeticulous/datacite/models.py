@@ -498,5 +498,7 @@ class DataciteV45(ByAliasExcludeNoneMixin, BaseModel):
     descriptions: Optional[List[Description]] = None
     geoLocations: Optional[List[GeoLocation]] = None
     fundingReferences: Optional[List[FundingReference]] = None
-    schemaVersion: Literal["http://datacite.org/schema/kernel-4"]
+    schemaVersion: Literal["http://datacite.org/schema/kernel-4"] = (
+        "http://datacite.org/schema/kernel-4"
+    )
     container: Optional[Container] = None
