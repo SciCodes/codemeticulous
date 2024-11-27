@@ -6,9 +6,7 @@ import re
 from typing import Optional
 from urllib.parse import urlparse
 
-from pydantic2_schemaorg.PostalAddress import PostalAddress as SchemaOrgPostalAddress
-from pydantic2_schemaorg.Person import Person as SchemaOrgPerson
-from pydantic2_schemaorg.Organization import Organization as SchemaOrgOrganization
+from pydantic2_schemaorg.CreativeWork import CreativeWork as SchemaOrgCreativeWork
 
 from codemeticulous.codemeta.extract import (
     CodeMetaActorExtractor,
@@ -35,6 +33,7 @@ from codemeticulous.datacite.models import (
     NameIdentifier,
     Person,
     Publisher,
+    RightsListItem,
     Subject,
     Title,
     Types,
@@ -138,6 +137,42 @@ def codemeta_actors_to_datacite(
     return datacite_actors or None
 
 
+def codemeta_license_to_datacite_rights(
+    codemeta_license: Optional[
+        list[SchemaOrgCreativeWork | str] | SchemaOrgCreativeWork | str
+    ],
+) -> Optional[list[RightsListItem]]:
+    licenses = ensure_list(codemeta_license)
+    rights_list = []
+    license_url = None
+    license_name = None
+    for l in licenses:
+        # plain string licenses should always be urls
+        if isinstance(l, str) and is_url(l):
+            license_url = l
+        elif hasattr(l, "url") and is_url(l.url):
+            license_url = l.url
+        elif hasattr(l, "name"):
+            license_name = l.name
+        # FIXME: build a lookup table for spdx/osi licenses so we can figure out
+        # what license is being used and fill out all fields
+        rights_list.append(RightsListItem(rights=license_name, rightsUri=license_url))
+    return rights_list or None
+
+
+def codemeta_language_fileformat_to_datacite_format(
+    programming_language, file_format
+) -> list[str]:
+    possible_formats = ensure_list(programming_language) + ensure_list(file_format)
+    formats = []
+    for f in possible_formats:
+        if isinstance(f, str):
+            formats.append(f)
+        elif hasattr(f, "name"):
+            formats.append(f.name)
+    return formats or None
+
+
 def codemeta_to_datacite(data: CodeMeta, ignore_existing_doi=False) -> DataciteV45:
     primary_doi = (
         extract_doi_from_codemeta_identifier(data.identifier)
@@ -184,14 +219,17 @@ def codemeta_to_datacite(data: CodeMeta, ignore_existing_doi=False) -> DataciteV
             ]
             if date is not None
         ],
-        # FIXME: turn list of urls into list of relatedIdentifiers
+        # we have no way of knowing what the relationships are for relatedLinks since
+        # they are just urls
+        # TODO: though, it may be possible to use the following codemeta fields:
+        # hasPart, isPartOf, readme, sameAs, review, releaseNotes
         # relatedIdentifiers=data.relatedLink,
         sizes=[data.fileSize] if data.fileSize else None,
-        # FIXME: get from programmingLanguage and fileFormat
-        # formats=None,
+        formats=codemeta_language_fileformat_to_datacite_format(
+            data.programmingLanguage, data.fileFormat
+        ),
         version=str(data.version),
-        # FIXME: turn license into rights
-        # rightsList=[data.license],
+        rightsList=codemeta_license_to_datacite_rights(data.license),
         descriptions=descriptions,
         # codemeta.funding is a plain string, can't really ensure that the string
         # is the required name field
