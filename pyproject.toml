@@ -5,10 +5,14 @@ description = "validate and convert software metadata formats with pydantic"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "click>=8.1.7",
     "pydantic2-schemaorg==0.2.0",
     "pydantic>=2.9.2",
     "pyyaml>=6.0.2",
 ]
+
+[project.scripts]
+codemeticulous = "codemeticulous.cli:cli"
 
 [dependency-groups]
 dev = [
@@ -16,3 +20,14 @@ dev = [
     "datamodel-code-generator>=0.26.2",
     "pytest>=8.3.3",
 ]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tools.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+include = ["codemeticulous"]
+exclude = ["tests*", "schema"]

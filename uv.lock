@@ -71,8 +71,9 @@ wheels = [
 [[package]]
 name = "codemeticulous"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
+    { name = "click" },
     { name = "pydantic" },
     { name = "pydantic2-schemaorg" },
     { name = "pyyaml" },
@@ -87,6 +88,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "click", specifier = ">=8.1.7" },
     { name = "pydantic", specifier = ">=2.9.2" },
     { name = "pydantic2-schemaorg", specifier = "==0.2.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
