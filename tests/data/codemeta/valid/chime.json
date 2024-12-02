@@ -1,0 +1,80 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "isPartOf": {
+    "@type": "WebApplication",
+    "applicationCategory": "Computational Modeling Software Repository",
+    "operatingSystem": "Any",
+    "name": "CoMSES Model Library",
+    "url": "https://www.comses.net/codebases"
+  },
+  "publisher": {
+    "@id": "https://www.comses.net",
+    "@type": "Organization",
+    "name": "CoMSES Net",
+    "url": "https://www.comses.net"
+  },
+  "provider": {
+    "@id": "https://www.comses.net",
+    "@type": "Organization",
+    "name": "CoMSES Net",
+    "url": "https://www.comses.net"
+  },
+  "name": "CHIME ABM of Hurricane Evacuation",
+  "description": "The **Communicating Hazard Information in the Modern Environment** (CHIME) agent-based model (ABM) is a Netlogo program that facilitates the analysis of information flow and protective decisions across space and time during hazardous weather events. CHIME ABM provides a platform for testing hypotheses about collective human responses to weather forecasts and information flow, using empirical data from historical hurricanes. The model uses real world geographical and hurricane data to set the boundaries of the simulation, and it uses historical hurricane forecast information from the National Hurricane Center to initiate forecast information flow to citizen agents in the model.",
+  "version": "2.1.0",
+  "targetProduct": {
+    "@type": "SoftwareApplication",
+    "operatingSystem": "platform_independent",
+    "applicationCategory": "Computational Model",
+    "downloadUrl": "https://www.comses.net/codebases/34bd12bc-d8c7-4896-8edc-b977511a61aa/releases/2.1.0/download/",
+    "releaseNotes": "This release is an updated version of the CHIME ABM previously published by Joshua Watts and available here: https://doi.org/10.25937/hbnh-af93\n\n\nThis version has a wide array of small and large differences which include:\n- New Hurricanes\n- A procedure to read in the new hurricane forecast format from the National Hurricane Center\n- The inclusion of census data for Florida which can be used to modify the behavior of agents\n- A detailed code documentation and optimization",
+    "softwareVersion": "2.1.0",
+    "identifier": "https://www.comses.net/codebases/34bd12bc-d8c7-4896-8edc-b977511a61aa/releases/2.1.0/",
+    "sameAs": "https://www.comses.net/codebases/34bd12bc-d8c7-4896-8edc-b977511a61aa/releases/2.1.0/",
+    "screenshot": "https://www.comses.net/images/B2gwUQe3LaTIpimNMusNdldEdUk=/727/fill-205x115/96-8edc-b977511a61aa/media/sharedlibrary34bd12bc-d8c7-4896-8edc-b977511a61.png"
+  },
+  "programmingLanguage": [{ "@type": "ComputerLanguage", "name": "Logo" }],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Sean",
+      "familyName": "Bergin",
+      "@id": "https://orcid.org/0000-0001-9576-7914",
+      "affiliation": "Arizona State University",
+      "email": "sean.bergin@asu.edu"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Joshua",
+      "familyName": "Watts",
+      "email": "jswatts@asu.edu"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Joshua",
+      "familyName": "Alland",
+      "affiliation": "National Center for Atmospheric Research",
+      "email": "jalland@ucar.edu"
+    }
+  ],
+  "identifier": "https://www.comses.net/codebases/34bd12bc-d8c7-4896-8edc-b977511a61aa/releases/2.1.0/",
+  "dateCreated": "2021-10-15T21:22:25.992084+00:00",
+  "dateModified": "2022-01-01T18:59:48.675345+00:00",
+  "keywords": ["decision model", "risk", "hurricanes"],
+  "runtimePlatform": ["NetLogo"],
+  "url": "https://www.comses.net/codebases/34bd12bc-d8c7-4896-8edc-b977511a61aa/releases/2.1.0/",
+  "citation": [
+    { "@type": "CreativeWork", "text": "https://doi.org/10.25937/hbnh-af93" },
+    {
+      "@type": "CreativeWork",
+      "text": "Morss, R. E. et al. Hazardous Weather Prediction and Communication in the Modern Information Environment. Bulletin of the American Meteorological Society 98, 2653\u20132674 (2017).\n\nWatts, J., Morss, R. E., Barton, C. M. & Demuth, J. L. Conceptualizing and implementing an agent-based model of information flow and decision making during hurricane threats. Environmental Modelling & Software 122, 104524 (2019)."
+    }
+  ],
+  "datePublished": "2022-01-04",
+  "copyrightYear": 2022,
+  "license": "http://www.gnu.org/licenses/gpl-3.0.html",
+  "codeRepository": "https://github.com/comses/chime-abm",
+  "releaseNotes": "This release is an updated version of the CHIME ABM previously published by Joshua Watts and available here: https://doi.org/10.25937/hbnh-af93\n\n\nThis version has a wide array of small and large differences which include:\n- New Hurricanes\n- A procedure to read in the new hurricane forecast format from the National Hurricane Center\n- The inclusion of census data for Florida which can be used to modify the behavior of agents\n- A detailed code documentation and optimization",
+  "@id": "https://www.comses.net/codebases/34bd12bc-d8c7-4896-8edc-b977511a61aa/releases/2.1.0/"
+}

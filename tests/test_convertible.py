@@ -1,18 +1,27 @@
 from pathlib import Path
 
-from codemeticulous.cff.convert import codemeta_to_cff  # , cff_to_codemeta
+from codemeticulous.cff.convert import codemeta_to_cff
+from codemeticulous.datacite.convert import codemeta_to_datacite  # , cff_to_codemeta
 from .conftest import discover_test_files
 
 CONVERSION_MAP = {
     "codemeta": {
         "cff": {
             "func": codemeta_to_cff,
+            # cff requires authors
             "files": [
                 "codemetar.json",
                 "context.json",
                 "creator.json",
             ],
-        }
+        },
+        "datacite": {
+            "func": codemeta_to_datacite,
+            # datacite metadata requires creators, title, publisher, publication year
+            "files": [
+                "chime.json",
+            ],
+        },
     }
     # "cff": [cff_to_codemeta],
 }
