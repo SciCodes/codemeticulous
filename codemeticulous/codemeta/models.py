@@ -90,7 +90,7 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     permissions: Optional[list[str] | str]
     processorRequirements: Optional[list[str] | str]
     releaseNotes: Optional[TextOrUrlListOrSingle]
-    softwareHelp: Optional[list[CreativeWork] | CreativeWork]
+    softwareHelp: Optional[list[CreativeWork | AnyUrl] | CreativeWork | AnyUrl]
     softwareRequirements: Optional[SoftwareListOrSingle]
     softwareVersion: Optional[str]
     storageRequirements: Optional[TextOrUrlListOrSingle]
@@ -116,8 +116,8 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
     sponsor: Optional[ActorListOrSingle]
     version: Optional[list[int | float | str] | int | float | str]
     isAccessibleForFree: Optional[bool]
-    isPartOf: Optional[list[CreativeWork] | CreativeWork]
-    hasPart: Optional[list[CreativeWork] | CreativeWork]
+    isPartOf: Optional[list[CreativeWork | AnyUrl] | CreativeWork | AnyUrl]
+    hasPart: Optional[list[CreativeWork | AnyUrl] | CreativeWork | AnyUrl]
     position: Optional[list[int | str] | int | str]
     identifier: Optional[
         list[PropertyValue | str | AnyUrl] | PropertyValue | str | AnyUrl
@@ -219,7 +219,7 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
                         values[key.replace(f"{prefix}:", "")] = values.pop(key)
                         break
         # always remove @context so it gets set to the default codemeta v3 context
-        values.pop("@context")
+        values.pop("@context", None)
         return values
 
     @root_validator(pre=True)
