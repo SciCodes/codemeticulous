@@ -142,11 +142,11 @@ def load_file_autodetect(file_path):
         with open(file_path, "r") as file:
             if ext in [".json"]:
                 return json.load(file)
-            elif ext in [".yaml", ".yml"]:
+            elif ext in [".yaml", ".yml", ".cff"]:
                 return yaml.safe_load(file)
             else:
                 raise ValueError(
-                    f"Unsupported file extension: {ext}. Expected .json or .yaml"
+                    f"Unsupported file extension: {ext}."
                 )
     except Exception as e:
         raise ValueError(f"Failed to load file: {file_path}. {str(e)}")

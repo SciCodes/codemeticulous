@@ -221,7 +221,7 @@ def codemeta_to_cff(data: CodeMeta) -> CitationFileFormat:
     primary_doi = extract_doi_from_codemeta_identifier(data.identifier)
     return CitationFileFormat(
         cff_version="1.2.0",
-        message="If you use this software, please cite it as below.",
+        message="If you use this software, please cite it using the metadata from this file.",
         abstract=data.description,
         authors=codemeta_actors_to_cff(data.author),
         date_released=(
