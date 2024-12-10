@@ -4,15 +4,7 @@ import yaml
 from pathlib import Path
 from typing import Any, Literal
 
-from codemeticulous.codemeta.models import CodeMeta
-from codemeticulous.cff.models import CitationFileFormat
-from codemeticulous.datacite.models import DataciteV45
-
-MODEL_MAP: dict[str, Any] = {
-    "codemeta": CodeMeta,
-    "cff": CitationFileFormat,
-    "datacite": DataciteV45,
-}
+from codemeticulous.convert import STANDARDS
 
 
 @pytest.fixture(scope="session")
@@ -42,9 +34,9 @@ def discover_test_files(test_data_dir: Path, model_name: str, specifier: str):
 @pytest.fixture
 def load_model_data():
     def _load(model_name: str, file_path: Path):
-        model_class = MODEL_MAP.get(model_name)
+        model_class = STANDARDS[model_name]["model"]
         if model_class is None:
-            raise ValueError(f"Model '{model_name}' is not defined in MODEL_MAP.")
+            raise ValueError(f"Model '{model_name}' is not registered.")
         data, file_type = load_file(file_path)
         return model_class, data, file_type
 

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from .conftest import MODEL_MAP, discover_test_files
+from .conftest import STANDARDS, discover_test_files
 
 
 def pytest_generate_tests(metafunc):
@@ -11,7 +11,7 @@ def pytest_generate_tests(metafunc):
         test_cases = []
         test_ids = []
         test_data_dir = Path(__file__).parent / "data"
-        for model_name in MODEL_MAP.keys():
+        for model_name in STANDARDS.keys():
             valid_files = discover_test_files(test_data_dir, model_name, "valid")
             for file_path in valid_files:
                 test_cases.append((model_name, file_path))

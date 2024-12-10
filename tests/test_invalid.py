@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from pydantic.v1 import ValidationError
 
-from .conftest import MODEL_MAP, discover_test_files
+from .conftest import STANDARDS, discover_test_files
 
 
 def pytest_generate_tests(metafunc):
@@ -10,7 +10,7 @@ def pytest_generate_tests(metafunc):
         test_cases = []
         test_ids = []
         test_data_dir = Path(__file__).parent / "data"
-        for model_name in MODEL_MAP.keys():
+        for model_name in STANDARDS.keys():
             invalid_files = discover_test_files(test_data_dir, model_name, "invalid")
             for file_path in invalid_files:
                 test_cases.append((model_name, file_path))

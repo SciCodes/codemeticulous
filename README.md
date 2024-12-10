@@ -1,14 +1,11 @@
 ![](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Fsgfost%2Fcodemeticulous%2Fmain%2Fpyproject.toml) ![](https://img.shields.io/github/license/sgfost/codemeticulous)
 
-> [!NOTE]
+> [!WARNING]
 > `codemeticulous` is in an early state of development and things are subject to change. Refer to the [table](#feature-roadmap) below to see currently supported formats and conversions.
 
-`codemeticulous` is a python library and command line utility for validating and converting between different metadata standards for software. Validation is done by providing [pydantic](https://docs.pydantic.dev/latest/) models that mirror the standards' schema definitions.
+`codemeticulous` is a python library and command line utility for working with different metadata standards for software. Several [Pydantic](https://docs.pydantic.dev/latest/) models that mirror metadata schemas are provided which allows for simple validation, (de)serialization and type-safety for developers.
 
-Currently, CodeMeta is used as a central "hub" representation of software metadata as it is the most exhaustive, and provides [crosswalk definitions](https://codemeta.github.io/crosswalk/) between other formats. This is done in order to avoid the need for a bridge between every format, though custom conversion logic can be implemented where needed.
-
-> [!NOTE]
-> This is subject to change, however. There is an argument to be made for whether an even more robust internal data model would be beneficial. Namely, that going through CodeMeta/schema.org means some conversions will be lossy.
+For converting between different standards, an extension of [CodeMeta](https://codemeta.github.io/), called `CanonicalCodeMeta`, is used as a canonical data model or central "hub" representation, along with conversion logic back and forth between it and supported standards. This design allows for conversion between any two formats without needing to implement each bridge. CodeMeta was chosen as it is the most exhaustive and provides [crosswalk definitions](https://codemeta.github.io/crosswalk/) between other formats. Still, some data loss can occur, so some extension is needed to fill schema gaps and resolve abiguity. Note that `CanonicalCodeMeta` is not a proposed standard, but an internal data model used by this library.
 
 ## Feature Roadmap
 
@@ -22,15 +19,15 @@ Currently, CodeMeta is used as a central "hub" representation of software metada
     <td>Name<br></td>
     <td>Version(s)</td>
     <td>Pydantic Model</td>
-    <td>from CodeMeta<br></td>
-    <td>to CodeMeta<br></td>
+    <td>convert <b>to</b><br></td>
+    <td>convert <b>from</b><br></td>
   </tr>
   <tr>
     <td><a href="https://codemeta.github.io/">CodeMeta</a><br></td>
     <td><a href="https://w3id.org/codemeta/3.0"><code>v3</code></a></td>
     <td>✅ *</td>
-    <td>-</td>
-    <td>-</td>
+    <td>✅</td>
+    <td>✅</td>
   </tr>
   <tr>
     <td><a href="https://schema.datacite.org/">Datacite</a></td>
@@ -96,15 +93,15 @@ $ codemeticulous validate --format cff CITATION.cff
 ### As a python library
 
 ```python
-from codemeticulous.codemeta.models import CodeMeta, Person
-from codemeticulous.cff.convert import codemeta_to_cff
+from codemeticulous.codemeta import CodeMeta, Person
+from codemeticulous import convert
 
 codemeta = CodeMeta(
   name="My Project",
   author=Person(givenName="Dale", familyName="Earnhardt"),
 )
 
-cff = codemeta_to_cff(codemeta)
+cff = convert("codemeta", "cff", codemeta)
 
 print(codemeta.json(indent=True))
 # {

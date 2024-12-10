@@ -1,6 +1,6 @@
+from typing import Optional
 from abc import ABC
 import re
-from typing import Optional
 
 from pydantic2_schemaorg.PostalAddress import PostalAddress
 from pydantic2_schemaorg.Person import Person
@@ -16,7 +16,7 @@ from codemeticulous.utils import (
 )
 
 
-class CodeMetaActorExtractor:
+class ActorExtractor:
 
     def __init__(self, actor: CodeMetaActor):
         if not isinstance(actor, CodeMetaActor):
@@ -168,7 +168,7 @@ class CodeMetaActorExtractor:
         return get_first_if_list(self.actor.url)
 
 
-def extract_doi_from_codemeta_identifier(identifier) -> Optional[str]:
+def extract_doi_from_identifier(identifier) -> Optional[str]:
     """extracts the primary DOI from the CodeMeta identifier field"""
     identifiers = ensure_list(identifier)
     doi_pattern = re.compile(

@@ -1,0 +1,18 @@
+abstract: validate and convert between software metadata standards with pydantic
+authors:
+- affiliation: Arizona State University
+  email: sgfost@asu.edu
+  family-names: Foster
+  given-names: Scott
+cff-version: 1.2.0
+keywords:
+- software metadata
+- codemeta
+- research software
+- FAIR
+license: GPL-3.0
+message: If you use this software, please cite it using the metadata from this file.
+repository-code: https://github.com/sgfost/codemeticulous/
+title: codemeticulous
+type: software
+version: 0.1.0

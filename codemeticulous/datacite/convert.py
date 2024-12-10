@@ -8,10 +8,8 @@ from urllib.parse import urlparse
 
 from pydantic2_schemaorg.CreativeWork import CreativeWork as SchemaOrgCreativeWork
 
-from codemeticulous.codemeta.extract import (
-    CodeMetaActorExtractor,
-    extract_doi_from_codemeta_identifier,
-)
+from codemeticulous.models import CanonicalCodeMeta
+from codemeticulous.extract import ActorExtractor, extract_doi_from_identifier
 from codemeticulous.codemeta.models import (
     CodeMeta,
     Actor as CodeMetaActor,
@@ -53,7 +51,7 @@ def codemeta_actors_to_datacite(
     actors = ensure_list(actors)
     datacite_actors = []
     for actor in actors:
-        extractor = CodeMetaActorExtractor(actor)
+        extractor = ActorExtractor(actor)
         # pull out identifier url, scheme, and scheme uri
         name_identifiers = []
         if extractor.identifiers:
@@ -173,9 +171,9 @@ def codemeta_language_fileformat_to_datacite_format(
     return formats or None
 
 
-def codemeta_to_datacite(data: CodeMeta, ignore_existing_doi=False) -> DataciteV45:
+def canonical_to_datacite(data: CanonicalCodeMeta, ignore_existing_doi=False) -> DataciteV45:
     primary_doi = (
-        extract_doi_from_codemeta_identifier(data.identifier)
+        extract_doi_from_identifier(data.identifier)
         if not ignore_existing_doi
         else None
     )
@@ -237,5 +235,5 @@ def codemeta_to_datacite(data: CodeMeta, ignore_existing_doi=False) -> DataciteV
     )
 
 
-def datacite_to_codemeta(data: DataciteV45) -> CodeMeta:
+def datacite_to_canonical(data: DataciteV45) -> CanonicalCodeMeta:
     raise NotImplementedError

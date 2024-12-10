@@ -10,10 +10,8 @@ from pydantic2_schemaorg.PostalAddress import PostalAddress as SchemaOrgPostalAd
 from pydantic2_schemaorg.Person import Person as SchemaOrgPerson
 from pydantic2_schemaorg.Organization import Organization as SchemaOrgOrganization
 
-from codemeticulous.codemeta.extract import (
-    CodeMetaActorExtractor,
-    extract_doi_from_codemeta_identifier,
-)
+from codemeticulous.models import CanonicalCodeMeta
+from codemeticulous.extract import ActorExtractor, extract_doi_from_identifier
 from codemeticulous.codemeta.models import (
     CodeMeta,
     Actor as CodeMetaActor,
@@ -45,7 +43,7 @@ def codemeta_actors_to_cff(actors: CodeMetaActorListOrSingle) -> list[Person | E
     actors = ensure_list(actors)
     cff_actors = []
     for actor in actors:
-        extractor = CodeMetaActorExtractor(actor)
+        extractor = ActorExtractor(actor)
         if extractor.is_person:
             cff_actors.append(
                 Person(
@@ -213,12 +211,12 @@ def extract_main_url_from_codemeta(data: CodeMeta) -> str:
     )
 
 
-def codemeta_to_cff(data: CodeMeta) -> CitationFileFormat:
+def canonical_to_cff(data: CanonicalCodeMeta) -> CitationFileFormat:
     """Extract all possible Citation File Format fields from a CodeMeta object based
     on the CodeMeta crosswalk and return a CitationFileFormat object
     """
     licenses, license_urls = codemeta_license_to_cff(data.license)
-    primary_doi = extract_doi_from_codemeta_identifier(data.identifier)
+    primary_doi = extract_doi_from_identifier(data.identifier)
     return CitationFileFormat(
         cff_version="1.2.0",
         message="If you use this software, please cite it using the metadata from this file.",
@@ -250,5 +248,5 @@ def codemeta_to_cff(data: CodeMeta) -> CitationFileFormat:
     )
 
 
-def cff_to_codemeta(data: CitationFileFormat) -> CodeMeta:
+def cff_to_canonical(data: CitationFileFormat) -> CanonicalCodeMeta:
     raise NotImplementedError

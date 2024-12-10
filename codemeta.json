@@ -1,0 +1,34 @@
+{
+    "@context": "https://w3id.org/codemeta/3.0",
+    "type": "SoftwareSourceCode",
+    "author": [
+        {
+            "id": "_:author_1",
+            "type": "Person",
+            "affiliation": {
+                "type": "Organization",
+                "name": "Arizona State University"
+            },
+            "email": "sgfost@asu.edu",
+            "familyName": "Foster",
+            "givenName": "Scott"
+        }
+    ],
+    "codeRepository": "https://github.com/sgfost/codemeticulous/",
+    "dateCreated": "2024-11-05",
+    "description": "validate and convert between software metadata standards with pydantic",
+    "keywords": [
+        "software metadata",
+        "codemeta",
+        "research software",
+        "FAIR"
+    ],
+    "license": "https://spdx.org/licenses/GPL-3.0",
+    "name": "codemeticulous",
+    "programmingLanguage": "Python 3",
+    "softwareRequirements": "Python 3.10",
+    "version": "0.1.0",
+    "continuousIntegration": "https://github.com/sgfost/codemeticulous/actions/",
+    "issueTracker": "https://github.com/sgfost/codemeticulous/issues"
+}
+
