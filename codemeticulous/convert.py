@@ -41,15 +41,15 @@ def to_canonical(source_format: str, source_data):
     return canonical_instance
 
 
-def from_canonical(target_format: str, canonical_instance):
+def from_canonical(target_format: str, canonical_instance, **custom_fields):
     canonical_to_target = STANDARDS[target_format]["from_canonical"]
-    target_instance = canonical_to_target(canonical_instance)
+    target_instance = canonical_to_target(canonical_instance, **custom_fields)
 
     return target_instance
 
 
-def convert(source_format: str, target_format: str, source_data):
+def convert(source_format: str, target_format: str, source_data, **custom_fields):
     # FIXME: add tons of error handling
 
     canonical_instance = to_canonical(source_format, source_data)
-    return from_canonical(target_format, canonical_instance)
+    return from_canonical(target_format, canonical_instance, **custom_fields)

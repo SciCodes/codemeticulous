@@ -211,7 +211,7 @@ def extract_main_url_from_codemeta(data: CodeMeta) -> str:
     )
 
 
-def canonical_to_cff(data: CanonicalCodeMeta) -> CitationFileFormat:
+def canonical_to_cff(data: CanonicalCodeMeta, **custom_fields) -> CitationFileFormat:
     """Extract all possible Citation File Format fields from a CodeMeta object based
     on the CodeMeta crosswalk and return a CitationFileFormat object
     """
@@ -245,6 +245,7 @@ def canonical_to_cff(data: CanonicalCodeMeta) -> CitationFileFormat:
         type="software",
         url=extract_main_url_from_codemeta(data),
         version=data.version,
+        **custom_fields,
     )
 
 

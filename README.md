@@ -101,7 +101,9 @@ codemeta = CodeMeta(
   author=Person(givenName="Dale", familyName="Earnhardt"),
 )
 
-cff = convert("codemeta", "cff", codemeta)
+# commit kwarg is an override that can be used to insert
+# a custom field into the resulting metadata after conversion
+cff = convert("codemeta", "cff", codemeta, commit="abcdef123456789")
 
 print(codemeta.json(indent=True))
 # {
@@ -119,6 +121,7 @@ print(cff.yaml())
 # message: If you use this software, please cite it using the metadata from this file.
 # title: My Project
 # type: software
+# commit: abcdef123456789
 ```
 
 <!-- ### As a Github Action -->

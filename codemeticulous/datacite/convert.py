@@ -171,7 +171,7 @@ def codemeta_language_fileformat_to_datacite_format(
     return formats or None
 
 
-def canonical_to_datacite(data: CanonicalCodeMeta, ignore_existing_doi=False) -> DataciteV45:
+def canonical_to_datacite(data: CanonicalCodeMeta, ignore_existing_doi=False, **custom_fields) -> DataciteV45:
     primary_doi = (
         extract_doi_from_identifier(data.identifier)
         if not ignore_existing_doi
@@ -232,6 +232,7 @@ def canonical_to_datacite(data: CanonicalCodeMeta, ignore_existing_doi=False) ->
         # codemeta.funding is a plain string, can't really ensure that the string
         # is the required name field
         # fundingReferences=None,
+        **custom_fields,
     )
 
 
