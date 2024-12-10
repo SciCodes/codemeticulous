@@ -23,7 +23,7 @@ from enum import Enum
 from typing import Any, List, Literal, Optional, Union
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
-from codemeticulous.common.mixins import ByAliasExcludeNoneMixin
+from codemeticulous.mixins import ByAliasExcludeNoneMixin
 
 
 class Event(Enum):

@@ -9,7 +9,7 @@ from pydantic2_schemaorg.Organization import Organization
 from codemeticulous.codemeta.models import (
     Actor as CodeMetaActor,
 )
-from codemeticulous.common.utils import (
+from codemeticulous.utils import (
     ensure_list,
     get_first_if_list,
     is_url,

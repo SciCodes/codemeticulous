@@ -19,7 +19,7 @@ from codemeticulous.codemeta.models import (
     Actor as CodeMetaActor,
     ActorListOrSingle as CodeMetaActorListOrSingle,
 )
-from codemeticulous.common.utils import (
+from codemeticulous.utils import (
     get_first_if_single_list,
     ensure_list,
     get_first_if_list,

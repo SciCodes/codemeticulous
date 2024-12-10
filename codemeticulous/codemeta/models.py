@@ -17,8 +17,8 @@ from pydantic2_schemaorg.CreativeWork import CreativeWork
 from pydantic2_schemaorg.MediaObject import MediaObject
 from pydantic2_schemaorg.SoftwareApplication import SoftwareApplication
 
-from codemeticulous.common.utils import map_dict_keys
-from codemeticulous.common.mixins import ByAliasExcludeNoneMixin
+from codemeticulous.utils import map_dict_keys
+from codemeticulous.mixins import ByAliasExcludeNoneMixin
 
 
 class VersionedLanguage(ComputerLanguage):

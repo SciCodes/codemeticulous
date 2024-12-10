@@ -24,7 +24,7 @@ from typing import List, Literal, Optional, Union
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, RootModel
 
-from codemeticulous.common.mixins import ByAliasExcludeNoneMixin
+from codemeticulous.mixins import ByAliasExcludeNoneMixin
 
 
 class Type(Enum):
