@@ -1,5 +1,5 @@
 from codemeticulous.codemeta.models import CodeMeta
-from codemeticulous.datacite.models import DataciteV45
+from codemeticulous.datacite.models import DataCite
 from codemeticulous.cff.models import CitationFileFormat
 from codemeticulous.codemeta.convert import canonical_to_codemeta, codemeta_to_canonical
 from codemeticulous.datacite.convert import canonical_to_datacite, datacite_to_canonical
@@ -14,7 +14,7 @@ STANDARDS = {
         "from_canonical": canonical_to_codemeta,
     },
     "datacite": {
-        "model": DataciteV45,
+        "model": DataCite,
         "format": "json",
         "to_canonical": datacite_to_canonical,
         "from_canonical": canonical_to_datacite,

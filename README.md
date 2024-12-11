@@ -11,35 +11,31 @@ For converting between different standards, an extension of [CodeMeta](https://c
 
 <table><thead>
   <tr>
-    <th colspan="2">Schema</th>
-    <th colspan="3">Status<br></th>
+    <th>Schema</th>
+    <th>Pydantic model</th>
+    <th>Backward-compatible with<a href="#1"><sup>[1]</sup></a></th>
+    <th>Convert <i>to</i></th>
+    <th>Convert <i>from</i></th>
   </tr></thead>
 <tbody>
   <tr>
-    <td>Name<br></td>
-    <td>Version(s)</td>
-    <td>Pydantic Model</td>
-    <td>convert <b>to</b><br></td>
-    <td>convert <b>from</b><br></td>
-  </tr>
-  <tr>
-    <td><a href="https://codemeta.github.io/">CodeMeta</a><br></td>
-    <td><a href="https://w3id.org/codemeta/3.0"><code>v3</code></a></td>
-    <td>✅ *</td>
+    <td><a href="https://w3id.org/codemeta/3.0">CodeMeta v3</a></td>
+    <td>✅<a href="#2"><sup>[2]</sup></a></td>
+    <td>v2</td>
     <td>✅</td>
     <td>✅</td>
   </tr>
   <tr>
-    <td><a href="https://schema.datacite.org/">Datacite</a></td>
-    <td><a href="https://datacite-metadata-schema.readthedocs.io/en/4.5/"><code>v4.5</code></a><br></td>
+    <td><a href="https://datacite-metadata-schema.readthedocs.io/en/4.6">Datacite 4.6</a></td>
     <td>✅</td>
+    <td>4.0, 4.1, 4.2, 4.3, 4.4, 4.5</td>
     <td>✅</td>
     <td></td>
   </tr>
   <tr>
-    <td><a href="https://citation-file-format.github.io/">Citation File Format</a></td>
-    <td><a href="https://github.com/citation-file-format/citation-file-format/blob/bd0b31df69dccf11b31584585b5fb8c39d3e0e09/schema.json"><code>1.2.0</a></code></td>
+    <td><a href="https://citation-file-format.github.io/">Citation File Format 1.2.0</a></td>
     <td>✅</td>
+    <td></td>
     <td>✅</td>
     <td></td>
   </tr>
@@ -67,7 +63,11 @@ For converting between different standards, an extension of [CodeMeta](https://c
 </tbody>
 </table>
 
-\* The `CodeMeta` model is currently implemented as a pydantic **v1** model, due to a heavy reliance on [pydantic_schemaorg](https://github.com/lexiq-legal/pydantic_schemaorg) which has not been fully updated.
+##### [1]
+Lists the versions that can be safely used as input. Output will always use the specified version. For example, the `CodeMetaV3` model will accept v2 property names and automatically change them to v3 equivalents.
+
+##### [2]
+The `CodeMeta` model is currently implemented as a pydantic **v1** model, due to a heavy reliance on [pydantic_schemaorg](https://github.com/lexiq-legal/pydantic_schemaorg) which has not been fully updated.
 
 ## Installation
 

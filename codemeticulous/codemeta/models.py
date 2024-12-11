@@ -40,7 +40,7 @@ SoftwareList = list[Software]
 SoftwareListOrSingle = Software | SoftwareList
 
 
-class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
+class CodeMetaV3(ByAliasExcludeNoneMixin, BaseModel):
     """CodeMeta v3 schema (supports v2 fields aliased to v3)
     see: https://codemeta.github.io/terms/
     and: https://github.com/codemeta/codemeta-generator/blob/master/js/validation/
@@ -272,3 +272,6 @@ class CodeMeta(ByAliasExcludeNoneMixin, BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+
+
+CodeMeta = CodeMetaV3

@@ -1575,7 +1575,7 @@ class Reference(BaseModel):
     """
 
 
-class CitationFileFormat(ByAliasExcludeNoneMixin, BaseModel):
+class CitationFileFormatV120(ByAliasExcludeNoneMixin, BaseModel):
     model_config = ConfigDict(
         extra="forbid",
         populate_by_name=True,
@@ -1694,3 +1694,6 @@ class CitationFileFormat(ByAliasExcludeNoneMixin, BaseModel):
     """
     The version of the software or dataset.
     """
+
+
+CitationFileFormat = CitationFileFormatV120

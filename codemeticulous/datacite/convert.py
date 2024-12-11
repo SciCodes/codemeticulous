@@ -26,7 +26,7 @@ from codemeticulous.datacite.models import (
     Contributor,
     ContributorType,
     Creator,
-    DataciteV45,
+    DataCite,
     DateModel,
     Description,
     NameIdentifier,
@@ -154,6 +154,7 @@ CONTRIBUTOR_TYPE_MAP = {
         "financial backer",
     },
     ContributorType.Supervisor: {"supervisor", "advisor", "overseer", "mentor"},
+    ContributorType.Translator: {"translator", "translation"},
     ContributorType.WorkPackageLeader: {
         "work package leader",
         "package leader",
@@ -222,9 +223,17 @@ def codemeta_actors_to_datacite(
             # match roles to contributor types
             matched_roles = set()
             for role in extractor.role_names:
-                normalized_role = role.lower().replace(" ", "").replace("-", "").replace("_", "")
-                for contributor_type, synonyms, in CONTRIBUTOR_TYPE_MAP.items():
-                    if normalized_role in {s.lower().replace(" ", "").replace("-", "").replace("_", "") for s in synonyms}:
+                normalized_role = (
+                    role.lower().replace(" ", "").replace("-", "").replace("_", "")
+                )
+                for (
+                    contributor_type,
+                    synonyms,
+                ) in CONTRIBUTOR_TYPE_MAP.items():
+                    if normalized_role in {
+                        s.lower().replace(" ", "").replace("-", "").replace("_", "")
+                        for s in synonyms
+                    }:
                         matched_roles.add(contributor_type)
             # if we have no matched roles, default to "Other"
             if not matched_roles:
@@ -235,13 +244,16 @@ def codemeta_actors_to_datacite(
                     Contributor(
                         name=extractor.name,
                         nameType=(
-                            "Organizational" if extractor.is_organization else "Personal"
+                            "Organizational"
+                            if extractor.is_organization
+                            else "Personal"
                         ),
                         givenName=extractor.given_names,
                         familyName=extractor.family_names,
                         nameIdentifiers=[NameIdentifier(**i) for i in name_identifiers]
                         or None,
-                        affiliation=[AffiliationItem(**a) for a in affiliations] or None,
+                        affiliation=[AffiliationItem(**a) for a in affiliations]
+                        or None,
                         contributorType=role_type.value,
                     )
                 )
@@ -307,7 +319,7 @@ def codemeta_language_fileformat_to_datacite_format(
 
 def canonical_to_datacite(
     data: CanonicalCodeMeta, ignore_existing_doi=False, **custom_fields
-) -> DataciteV45:
+) -> DataCite:
     primary_doi = (
         extract_doi_from_identifier(data.identifier)
         if not ignore_existing_doi
@@ -328,7 +340,7 @@ def canonical_to_datacite(
                 for note in release_notes
             ]
         )
-    return DataciteV45(
+    return DataCite(
         doi=primary_doi,
         prefix=doi_prefix,
         suffix=doi_suffix,
@@ -372,7 +384,7 @@ def canonical_to_datacite(
     )
 
 
-def datacite_to_canonical(data: DataciteV45) -> CanonicalCodeMeta:
+def datacite_to_canonical(data: DataCite) -> CanonicalCodeMeta:
     raise NotImplementedError(
         "DataCite metadata is not yet supported as an input format"
     )
