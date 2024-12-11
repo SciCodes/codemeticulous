@@ -1,4 +1,5 @@
 import os
+import traceback
 import click
 import json
 import yaml
@@ -36,17 +37,27 @@ def cli():
     default=None,
     help="Output file name (by default prints to stdout)",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Print verbose output",
+)
 @click.argument("input_file", type=click.Path(exists=True))
-def convert(source_format: str, target_format: str, input_file, output_file):
+def convert(source_format: str, target_format: str, input_file, output_file, verbose):
     try:
         input_data = load_file_autodetect(input_file)
     except Exception as e:
         click.echo(f"Failed to load file: {input_file}. {str(e)}", err=True)
-
+        if verbose:
+            traceback.print_exc()
     try:
         converted_data = _convert(source_format, target_format, input_data)
     except Exception as e:
         click.echo(f"Error during conversion: {str(e)}", err=True)
+        if verbose:
+            traceback.print_exc()
         return
 
     output_format = STANDARDS[target_format]["format"]
@@ -55,6 +66,8 @@ def convert(source_format: str, target_format: str, input_file, output_file):
         output_data = dump_data(converted_data, output_format)
     except Exception as e:
         click.echo(f"Error during serialization: {str(e)}", err=True)
+        if verbose:
+            traceback.print_exc()
         return
 
     if output_file:
@@ -73,13 +86,22 @@ def convert(source_format: str, target_format: str, input_file, output_file):
     required=True,
     help="Format to validate",
 )
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Print verbose output",
+)
 @click.argument("input_file", type=click.Path(exists=True))
-def validate(format_name, input_file):
+def validate(format_name, input_file, verbose):
     try:
         load_and_create_model(input_file, STANDARDS[format_name]["model"])
         click.echo(f"{input_file} is a valid {format_name} file.")
     except ValueError as e:
         click.echo(str(e), err=True)
+        if verbose:
+            traceback.print_exc()
 
 
 def dump_data(data, format):

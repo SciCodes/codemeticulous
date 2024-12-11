@@ -49,7 +49,14 @@ def from_canonical(target_format: str, canonical_instance, **custom_fields):
 
 
 def convert(source_format: str, target_format: str, source_data, **custom_fields):
-    # FIXME: add tons of error handling
+    """
+    Convert from one metadata standard to another, through the canonical representation.
 
+    Args:
+    - source_format: string representation of the source metadata standard. Currently supported: "codemeta"
+    - target_format: string representation of the target metadata standard. Currently supported: "codemeta", "datacite", "cff"
+    - source_data: dict or pydantic.BaseModel instance representing the source metadata
+    - custom_fields: additional fields to add to the target metadata instance
+    """
     canonical_instance = to_canonical(source_format, source_data)
     return from_canonical(target_format, canonical_instance, **custom_fields)

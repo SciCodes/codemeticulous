@@ -42,7 +42,8 @@ def codemeta_actors_to_cff(actors: CodeMetaActorListOrSingle) -> list[Person | E
     """
     actors = ensure_list(actors)
     cff_actors = []
-    for actor in actors:
+    # exclude role indicators from actors list (not used in CFF)
+    for actor in [a for a in actors if a.type_ != "Role"]:
         extractor = ActorExtractor(actor)
         if extractor.is_person:
             cff_actors.append(
@@ -250,4 +251,6 @@ def canonical_to_cff(data: CanonicalCodeMeta, **custom_fields) -> CitationFileFo
 
 
 def cff_to_canonical(data: CitationFileFormat) -> CanonicalCodeMeta:
-    raise NotImplementedError
+    raise NotImplementedError(
+        "Citation File Format is not yet supported as an input format"
+    )

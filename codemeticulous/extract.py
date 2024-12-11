@@ -5,6 +5,7 @@ import re
 from pydantic2_schemaorg.PostalAddress import PostalAddress
 from pydantic2_schemaorg.Person import Person
 from pydantic2_schemaorg.Organization import Organization
+from pydantic2_schemaorg.Role import Role
 
 from codemeticulous.codemeta.models import (
     Actor as CodeMetaActor,
@@ -18,13 +19,18 @@ from codemeticulous.utils import (
 
 class ActorExtractor:
 
-    def __init__(self, actor: CodeMetaActor):
+    def __init__(self, actor: CodeMetaActor, roles: Optional[list[Role]] = None):
         if not isinstance(actor, CodeMetaActor):
             raise ValueError(
                 "actor must be a codemeta/schema.org Person, Organization, or Role"
             )
-        # TODO: extract from Role, depends on structuring in codemeta.models.FlexibleRole
         self.actor = actor
+        self.roles = roles
+
+    @property
+    def role_names(self) -> Optional[list[str]]:
+        if self.roles:
+            return [role.roleName for role in self.roles]
 
     @property
     def is_person(self) -> bool:

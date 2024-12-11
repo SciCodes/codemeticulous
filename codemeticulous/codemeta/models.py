@@ -27,29 +27,7 @@ class VersionedLanguage(ComputerLanguage):
     version: Optional[str]
 
 
-class FlexibleRole(Role):
-    """extends Role to allow for additional fields
-
-    FIXME: structuring this would be helpful so that "roled" authors/contributors can be
-    reliably extracted from a CodeMeta object. This is a bit of a hack for now.
-
-    it is unclear how exactly this is supposed to work but it seems that the
-    intent is to wrap authors/contributors in a Role e.g.:
-    {
-        "@type": "Role",
-        "roleName": "author",
-        "schema:author": {
-            "@type": "Person",
-            "name": "John Doe"
-        }
-    }
-    """
-
-    class Config:
-        extra = "allow"
-
-
-Actor = FlexibleRole | Person | Organization
+Actor = Role | Person | Organization
 ActorList = list[Actor]
 ActorListOrSingle = Actor | ActorList
 

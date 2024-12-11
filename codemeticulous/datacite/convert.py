@@ -24,6 +24,7 @@ from codemeticulous.utils import (
 from codemeticulous.datacite.models import (
     AffiliationItem,
     Contributor,
+    ContributorType,
     Creator,
     DataciteV45,
     DateModel,
@@ -43,15 +44,136 @@ IDENTIFIER_SCHEMES = {
     "isni.org": "ISNI",
 }
 
+CONTRIBUTOR_TYPE_MAP = {
+    ContributorType.ContactPerson: {
+        "contact",
+        "contact person",
+        "point of contact",
+        "main contact",
+        "primary contact",
+    },
+    ContributorType.DataCollector: {
+        "data collector",
+        "data collection",
+        "collector of data",
+        "field data collector",
+        "data gatherer",
+    },
+    ContributorType.DataCurator: {
+        "data curator",
+        "data curation",
+        "curator of data",
+        "data organizer",
+    },
+    ContributorType.DataManager: {
+        "data manager",
+        "data management",
+        "manager of data",
+        "data admin",
+    },
+    ContributorType.Distributor: {
+        "distributor",
+        "distribution",
+        "data distributor",
+        "content distributor",
+    },
+    ContributorType.Editor: {
+        "editor",
+        "editing",
+        "content editor",
+        "text editor",
+        "manuscript editor",
+    },
+    ContributorType.HostingInstitution: {
+        "hosting institution",
+        "host",
+        "institution host",
+        "hosting organization",
+    },
+    ContributorType.Producer: {
+        "producer",
+        "production",
+        "data producer",
+        "content producer",
+    },
+    ContributorType.ProjectLeader: {
+        "project leader",
+        "leader",
+        "project head",
+        "team leader",
+        "head of project",
+    },
+    ContributorType.ProjectManager: {
+        "project manager",
+        "manager",
+        "project administrator",
+        "project supervisor",
+    },
+    ContributorType.ProjectMember: {
+        "project member",
+        "member",
+        "team member",
+        "participant",
+    },
+    ContributorType.RegistrationAgency: {
+        "registration agency",
+        "registrar",
+        "agency registrar",
+        "registry agency",
+    },
+    ContributorType.RegistrationAuthority: {
+        "registration authority",
+        "authority",
+        "registry authority",
+        "regulatory authority",
+    },
+    ContributorType.RelatedPerson: {
+        "related person",
+        "person related",
+        "associated person",
+        "affiliate",
+    },
+    ContributorType.Researcher: {"researcher", "research", "investigator", "scientist"},
+    ContributorType.ResearchGroup: {
+        "research group",
+        "group",
+        "team",
+        "research team",
+        "research unit",
+    },
+    ContributorType.RightsHolder: {
+        "rights holder",
+        "copyright holder",
+        "intellectual property owner",
+        "rights owner",
+    },
+    ContributorType.Sponsor: {
+        "sponsor",
+        "funding sponsor",
+        "funder",
+        "financial backer",
+    },
+    ContributorType.Supervisor: {"supervisor", "advisor", "overseer", "mentor"},
+    ContributorType.WorkPackageLeader: {
+        "work package leader",
+        "package leader",
+        "task leader",
+        "subproject leader",
+    },
+}
 
+
+# FIXME: this is horrible, break it up
 def codemeta_actors_to_datacite(
     actors: CodeMetaActorListOrSingle,
     datacite_actor_model: Creator | Contributor | Publisher,
 ) -> Optional[list]:
     actors = ensure_list(actors)
     datacite_actors = []
-    for actor in actors:
-        extractor = ActorExtractor(actor)
+    for actor in [a for a in actors if a.type_ != "Role"]:
+        # after filtering out roles, we need to find the roles for this actor
+        roles = [r for r in actors if r.id_ == actor.id_ and r.type_ == "Role"]
+        extractor = ActorExtractor(actor, roles)
         # pull out identifier url, scheme, and scheme uri
         name_identifiers = []
         if extractor.identifiers:
@@ -97,20 +219,32 @@ def codemeta_actors_to_datacite(
                 )
             )
         elif datacite_actor_model == Contributor:
-            datacite_actors.append(
-                Contributor(
-                    name=extractor.name,
-                    nameType=(
-                        "Organizational" if extractor.is_organization else "Personal"
-                    ),
-                    givenName=extractor.given_names,
-                    familyName=extractor.family_names,
-                    nameIdentifiers=[NameIdentifier(**i) for i in name_identifiers]
-                    or None,
-                    affiliation=[AffiliationItem(**a) for a in affiliations] or None,
-                    contributorType="Other",  # FIXME: relies on extracting codemeta role
+            # match roles to contributor types
+            matched_roles = set()
+            for role in extractor.role_names:
+                normalized_role = role.lower().replace(" ", "").replace("-", "").replace("_", "")
+                for contributor_type, synonyms, in CONTRIBUTOR_TYPE_MAP.items():
+                    if normalized_role in {s.lower().replace(" ", "").replace("-", "").replace("_", "") for s in synonyms}:
+                        matched_roles.add(contributor_type)
+            # if we have no matched roles, default to "Other"
+            if not matched_roles:
+                matched_roles.add(ContributorType.Other)
+
+            for role_type in matched_roles:
+                datacite_actors.append(
+                    Contributor(
+                        name=extractor.name,
+                        nameType=(
+                            "Organizational" if extractor.is_organization else "Personal"
+                        ),
+                        givenName=extractor.given_names,
+                        familyName=extractor.family_names,
+                        nameIdentifiers=[NameIdentifier(**i) for i in name_identifiers]
+                        or None,
+                        affiliation=[AffiliationItem(**a) for a in affiliations] or None,
+                        contributorType=role_type.value,
+                    )
                 )
-            )
         elif datacite_actor_model == Publisher:
             datacite_actors.append(
                 Publisher(
@@ -171,7 +305,9 @@ def codemeta_language_fileformat_to_datacite_format(
     return formats or None
 
 
-def canonical_to_datacite(data: CanonicalCodeMeta, ignore_existing_doi=False, **custom_fields) -> DataciteV45:
+def canonical_to_datacite(
+    data: CanonicalCodeMeta, ignore_existing_doi=False, **custom_fields
+) -> DataciteV45:
     primary_doi = (
         extract_doi_from_identifier(data.identifier)
         if not ignore_existing_doi
@@ -237,4 +373,6 @@ def canonical_to_datacite(data: CanonicalCodeMeta, ignore_existing_doi=False, **
 
 
 def datacite_to_canonical(data: DataciteV45) -> CanonicalCodeMeta:
-    raise NotImplementedError
+    raise NotImplementedError(
+        "DataCite metadata is not yet supported as an input format"
+    )
