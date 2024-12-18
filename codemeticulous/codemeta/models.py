@@ -201,6 +201,37 @@ class CodeMetaV3(ByAliasExcludeNoneMixin, BaseModel):
         return values
 
     @root_validator(pre=True)
+    def fix_role_node_link(cls, values):
+        """roles aren't terribly well documented, but they appear to be done by linking
+        a Role to a Person or Organization node with "@id" or "contributor"/"author". The
+        Codemeta generator uses the key "schema:author" and "contributor", but it seems better
+        to use the node @id that actually exists in a schema.org Role
+
+        see https://github.com/codemeta/codemeta/issues/240
+        """
+        KEYS = ["author", "contributor", "schema:author", "schema:contributor"]
+
+        def transform_role(role_item):
+            if isinstance(role_item, dict) and (
+                role_item.get("type") == "Role" or role_item.get("@type") == "Role"
+            ):
+                for key in KEYS:
+                    if key in role_item:
+                        role_item["@id"] = role_item.pop(key)
+                        break
+            return role_item
+
+        for field in ["author", "contributor"]:
+            if field in values:
+                if isinstance(values[field], list):
+                    values[field] = [
+                        transform_role(role_item) for role_item in values[field]
+                    ]
+                else:
+                    values[field] = transform_role(values[field])
+        return values
+
+    @root_validator(pre=True)
     def coalesce_embargo_end_date(cls, values):
         embargo_date = values.get("embargoDate")
         embargo_end_date = values.get("embargoEndDate")
