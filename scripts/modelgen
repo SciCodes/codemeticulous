@@ -4,8 +4,8 @@
 # generates pydantic v2 models from a schema file
 
 # generate models
-datamodel-codegen --input "$1" --output "$2/model.gen.py" \
-    --output-model-type pydantic_v2.BaseModel \
+datamodel-codegen --input "$1" --output "$2" \
+    --output-model-type pydantic.BaseModel \
     --field-constraints \
     --allow-population-by-field-name \
     --collapse-root-models \
@@ -15,4 +15,4 @@ datamodel-codegen --input "$1" --output "$2/model.gen.py" \
     --disable-timestamp
 
 # run formatter
-black "$2/model.gen.py"
+black "$2"
