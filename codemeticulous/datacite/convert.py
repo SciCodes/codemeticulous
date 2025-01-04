@@ -312,7 +312,7 @@ def codemeta_language_fileformat_to_datacite_format(
     for f in possible_formats:
         if isinstance(f, str):
             formats.append(f)
-        elif hasattr(f, "name"):
+        elif hasattr(f, "name") and isinstance(f.name, str):
             formats.append(f.name)
     return formats or None
 
