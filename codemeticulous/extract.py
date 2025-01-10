@@ -142,6 +142,7 @@ class ActorExtractor:
                 affiliation_list.append((affiliation.name, identifier))
             elif isinstance(affiliation, str):
                 affiliation_list.append((affiliation, None))
+        return affiliation_list or None
 
     @property
     def orcid(self) -> Optional[str]:
