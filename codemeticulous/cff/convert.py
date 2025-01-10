@@ -219,34 +219,42 @@ def canonical_to_cff(data: CanonicalCodeMeta, **custom_fields) -> CitationFileFo
     licenses, license_urls = codemeta_license_to_cff(data.license)
     primary_doi = extract_doi_from_identifier(data.identifier)
     return CitationFileFormat(
-        cff_version="1.2.0",
-        message="If you use this software, please cite it using the metadata from this file.",
-        abstract=data.description,
-        authors=codemeta_actors_to_cff(data.author),
-        date_released=(
-            data.datePublished.date()
-            if isinstance(data.datePublished, datetime)
-            else data.datePublished
-        ),
-        doi=primary_doi,
-        identifiers=extract_identifiers_from_codemeta(data, primary_doi=primary_doi),
-        keywords=ensure_list(data.keywords) or None,
-        license=get_first_if_single_list(licenses) or None,
-        license_url=get_first_if_single_list(license_urls) or None,
-        # we cannot confidently say anything in citation should be the preferred-citation
-        preferred_citation=None,
-        references=codemeta_references_to_cff(data.citation, data.softwareRequirements),
-        # repository or repository-artifact could be in codemeta url, downloadUrl, installUrl,
-        # or relatedLink, but the semantics do not match up, so there is no reliable way to
-        # extract this information
-        repository=None,
-        repository_artifact=None,
-        repository_code=data.codeRepository,
-        title=data.name,
-        type="software",
-        url=extract_main_url_from_codemeta(data),
-        version=data.version,
-        **custom_fields,
+        **{
+            **dict(
+                cff_version="1.2.0",
+                message="If you use this software, please cite it using the metadata from this file.",
+                abstract=data.description,
+                authors=codemeta_actors_to_cff(data.author),
+                date_released=(
+                    data.datePublished.date()
+                    if isinstance(data.datePublished, datetime)
+                    else data.datePublished
+                ),
+                doi=primary_doi,
+                identifiers=extract_identifiers_from_codemeta(
+                    data, primary_doi=primary_doi
+                ),
+                keywords=ensure_list(data.keywords) or None,
+                license=get_first_if_single_list(licenses) or None,
+                license_url=get_first_if_single_list(license_urls) or None,
+                # we cannot confidently say anything in citation should be the preferred-citation
+                preferred_citation=None,
+                references=codemeta_references_to_cff(
+                    data.citation, data.softwareRequirements
+                ),
+                # repository or repository-artifact could be in codemeta url, downloadUrl, installUrl,
+                # or relatedLink, but the semantics do not match up, so there is no reliable way to
+                # extract this information
+                repository=None,
+                repository_artifact=None,
+                repository_code=data.codeRepository,
+                title=data.name,
+                type="software",
+                url=extract_main_url_from_codemeta(data),
+                version=data.version,
+            ),
+            **custom_fields,
+        }
     )
 
 

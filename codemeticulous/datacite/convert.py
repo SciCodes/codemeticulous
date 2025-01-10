@@ -341,49 +341,58 @@ def canonical_to_datacite(
             ]
         )
     return DataCite(
-        doi=primary_doi,
-        prefix=doi_prefix,
-        suffix=doi_suffix,
-        url=get_first_if_list(data.url),
-        types=Types(
-            resourceType=data.applicationCategory, resourceTypeGeneral="Software"
-        ),
-        creators=codemeta_actors_to_datacite(data.author, Creator),
-        titles=[Title(title=data.name)],
-        publisher=get_first_if_list(
-            codemeta_actors_to_datacite(data.publisher, Publisher)
-        ),
-        publicationYear=str(data.datePublished.year) if data.datePublished else None,
-        subjects=[Subject(subject=subject) for subject in ensure_list(data.keywords)]
-        or None,
-        contributors=codemeta_actors_to_datacite(data.contributor, Contributor),
-        dates=[
-            DateModel(
-                date=date.date() if isinstance(date, datetime) else date,
-                dateType=date_type,
-            )
-            for date, date_type in [
-                (data.dateCreated, "Created"),
-                (data.dateModified, "Updated"),
-            ]
-            if date is not None
-        ],
-        # we have no way of knowing what the relationships are for relatedLinks since
-        # they are just urls
-        # TODO: though, it may be possible to use the following codemeta fields:
-        # hasPart, isPartOf, readme, sameAs, review, releaseNotes
-        # relatedIdentifiers=data.relatedLink,
-        sizes=[data.fileSize] if data.fileSize else None,
-        formats=codemeta_language_fileformat_to_datacite_format(
-            data.programmingLanguage, data.fileFormat
-        ),
-        version=str(data.version) if data.version else None,
-        rightsList=codemeta_license_to_datacite_rights(data.license),
-        descriptions=descriptions,
-        # codemeta.funding is a plain string, can't really ensure that the string
-        # is the required name field
-        # fundingReferences=None,
-        **custom_fields,
+        **{
+            **dict(
+                doi=primary_doi,
+                prefix=doi_prefix,
+                suffix=doi_suffix,
+                url=get_first_if_list(data.url),
+                types=Types(
+                    resourceType=data.applicationCategory,
+                    resourceTypeGeneral="Software",
+                ),
+                creators=codemeta_actors_to_datacite(data.author, Creator),
+                titles=[Title(title=data.name)],
+                publisher=get_first_if_list(
+                    codemeta_actors_to_datacite(data.publisher, Publisher)
+                ),
+                publicationYear=(
+                    str(data.datePublished.year) if data.datePublished else None
+                ),
+                subjects=[
+                    Subject(subject=subject) for subject in ensure_list(data.keywords)
+                ]
+                or None,
+                contributors=codemeta_actors_to_datacite(data.contributor, Contributor),
+                dates=[
+                    DateModel(
+                        date=date.date() if isinstance(date, datetime) else date,
+                        dateType=date_type,
+                    )
+                    for date, date_type in [
+                        (data.dateCreated, "Created"),
+                        (data.dateModified, "Updated"),
+                    ]
+                    if date is not None
+                ],
+                # we have no way of knowing what the relationships are for relatedLinks since
+                # they are just urls
+                # TODO: though, it may be possible to use the following codemeta fields:
+                # hasPart, isPartOf, readme, sameAs, review, releaseNotes
+                # relatedIdentifiers=data.relatedLink,
+                sizes=[data.fileSize] if data.fileSize else None,
+                formats=codemeta_language_fileformat_to_datacite_format(
+                    data.programmingLanguage, data.fileFormat
+                ),
+                version=str(data.version) if data.version else None,
+                rightsList=codemeta_license_to_datacite_rights(data.license),
+                descriptions=descriptions,
+                # codemeta.funding is a plain string, can't really ensure that the string
+                # is the required name field
+                # fundingReferences=None,
+            ),
+            **custom_fields,
+        }
     )
 
 
