@@ -294,13 +294,17 @@ def codemeta_license_to_datacite_rights(
         # plain string licenses should always be urls
         if isinstance(l, str) and is_url(l):
             license_url = l
-        elif hasattr(l, "url") and is_url(l.url):
-            license_url = l.url
-        elif hasattr(l, "name"):
-            license_name = l.name
+        else:
+            if hasattr(l, "url") and is_url(l.url):
+                license_url = l.url
+            if hasattr(l, "name"):
+                license_name = l.name
         # FIXME: build a lookup table for spdx/osi licenses so we can figure out
         # what license is being used and fill out all fields
-        rights_list.append(RightsListItem(rights=license_name, rightsUri=license_url))
+        if license_name or license_url:
+            rights_list.append(
+                RightsListItem(rights=license_name, rightsUri=license_url)
+            )
     return rights_list or None
 
 
