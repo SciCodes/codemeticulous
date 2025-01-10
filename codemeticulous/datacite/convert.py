@@ -345,14 +345,17 @@ def canonical_to_datacite(
         prefix=doi_prefix,
         suffix=doi_suffix,
         url=get_first_if_list(data.url),
-        types=Types(resourceTypeGeneral="Software"),
+        types=Types(
+            resourceType=data.applicationCategory, resourceTypeGeneral="Software"
+        ),
         creators=codemeta_actors_to_datacite(data.author, Creator),
         titles=[Title(title=data.name)],
         publisher=get_first_if_list(
             codemeta_actors_to_datacite(data.publisher, Publisher)
         ),
         publicationYear=str(data.datePublished.year) if data.datePublished else None,
-        subjects=[Subject(subject=subject) for subject in ensure_list(data.keywords)],
+        subjects=[Subject(subject=subject) for subject in ensure_list(data.keywords)]
+        or None,
         contributors=codemeta_actors_to_datacite(data.contributor, Contributor),
         dates=[
             DateModel(
@@ -374,7 +377,7 @@ def canonical_to_datacite(
         formats=codemeta_language_fileformat_to_datacite_format(
             data.programmingLanguage, data.fileFormat
         ),
-        version=str(data.version),
+        version=str(data.version) if data.version else None,
         rightsList=codemeta_license_to_datacite_rights(data.license),
         descriptions=descriptions,
         # codemeta.funding is a plain string, can't really ensure that the string
