@@ -133,7 +133,7 @@ print(cff.yaml())
 Get started by cloning the repository and setting up a virtual environment
 
 ```
-$ git clone https://github.com/sgfost/codemeticulous.git
+$ git clone https://github.com/SciCodes/codemeticulous.git
 $ cd codemeticulous
 $ uv sync --dev
 $ source .venv/bin/activate
@@ -144,3 +144,4 @@ Run tests
 ```
 $ uv run pytest tests
 ```
+
