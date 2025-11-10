@@ -104,49 +104,7 @@ def validate(format_name, input_file, verbose):
             traceback.print_exc()
 
 
-def dump_data(data, format):
-    if format == "json":
-        return data.json()
-    elif format == "yaml":
-        return data.yaml()
-    else:
-        raise ValueError(f"Unsupported format: {format}. Expected json or yaml")
-
-
-def load_and_create_model(file_path, model):
-    try:
-        data = load_file_autodetect(file_path)
-    except Exception as e:
-        raise ValueError(f"Failed to load file: {file_path}. {str(e)}")
-    try:
-        return model(**data)
-    except Exception as e:
-        raise ValueError(f"Failed to validate: {str(e)}")
-
-
-def load_file_autodetect(file_path):
-    _, ext = os.path.splitext(file_path)
-    ext = ext.lower()
-    try:
-        with open(file_path, "r") as file:
-            if ext in [".json"]:
-                return json.load(file)
-            elif ext in [".yaml", ".yml", ".cff"]:
-                return yaml.safe_load(file)
-            else:
-                raise ValueError(f"Unsupported file extension: {ext}.")
-    except Exception as e:
-        raise ValueError(f"Failed to load file: {file_path}. {str(e)}")
-
 @cli.command()
-@click.option(
-    "-m",
-    "--model",
-    "llm_model",
-    type=str,
-    required=True,
-    help="LLM model to use for conversion (e.g., 'openrouter/openai/gpt-4o')",
-)
 @click.option(
     "-k",
     "--key",
@@ -154,6 +112,14 @@ def load_file_autodetect(file_path):
     type=str,
     required=True,
     help="API key for LLM authorization",
+)
+@click.option(
+    "-m",
+    "--model",
+    "llm_model",
+    type=str,
+    required=True,
+    help="LLM model to use for conversion (e.g., 'openrouter/openai/gpt-4o')",
 )
 @click.option(
     "-f",
@@ -187,7 +153,7 @@ def load_file_autodetect(file_path):
     help="Print verbose output",
 )
 @click.argument("input_file", type=click.Path(exists=True))
-def ai_convert(model: str, key: str, source_format: str, target_format: str, input_file, output_file, verbose):
+def ai_convert(api_key: str, llm_model: str, source_format: str, target_format: str, input_file, output_file, verbose):
     try:
         input_data = load_file_autodetect(input_file)
     except Exception as e:
@@ -195,7 +161,8 @@ def ai_convert(model: str, key: str, source_format: str, target_format: str, inp
         if verbose:
             traceback.print_exc()
     try:
-        converted_data = _convert_ai(model, key, source_format, target_format, input_data)
+        converted_data = _convert_ai(api_key, llm_model, source_format, target_format, input_data)
+        click.echo("AI-assisted conversion successful.")
     except Exception as e:
         click.echo(f"Error during AI-assisted conversion: {str(e)}", err=True)
         if verbose:
@@ -217,3 +184,38 @@ def ai_convert(model: str, key: str, source_format: str, target_format: str, inp
         click.echo(f"Data written to {output_file.name}")
     else:
         click.echo(output_data)
+
+
+def dump_data(data, format):
+    if format == "json":
+        return data.json()
+    elif format == "yaml":
+        return data.yaml()
+    else:
+        raise ValueError(f"Unsupported format: {format}. Expected json or yaml")
+
+
+def load_and_create_model(file_path, model):
+    try:
+        data = load_file_autodetect(file_path)
+    except Exception as e:
+        raise ValueError(f"Failed to load file: {file_path}. {str(e)}")
+    try:
+        return model(**data)
+    except Exception as e:
+        raise ValueError(f"Failed to validate: {str(e)}")
+
+
+def load_file_autodetect(file_path):
+    _, ext = os.path.splitext(file_path)
+    ext = ext.lower()
+    try:
+        with open(file_path, "r") as file:
+            if ext in [".json"]:
+                return json.load(file)
+            elif ext in [".yaml", ".yml", ".cff"]:
+                return yaml.safe_load(file)
+            else:
+                raise ValueError(f"Unsupported file extension: {ext}.")
+    except Exception as e:
+        raise ValueError(f"Failed to load file: {file_path}. {str(e)}")
