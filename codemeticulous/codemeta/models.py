@@ -54,7 +54,7 @@ class CodeMetaV3(ByAliasExcludeNoneMixin, BaseModel):
 
     codeRepository: Optional[AnyUrl]
     programmingLanguage: Optional[
-        VersionedLanguage | str | list[VersionedLanguage | str]
+        list[VersionedLanguage | str] | VersionedLanguage | str
     ]
     runtimePlatform: Optional[str | list[str]]
     targetProduct: Optional[list[SoftwareApplication | str] | SoftwareApplication | str]
