@@ -4,6 +4,7 @@ from litellm import completion
 import logging
 import instructor
 from codemeticulous.prompt_strategies import FewShotStrategy
+from codemeticulous.summarize_schema import get_schema_summary
 
 logging.basicConfig(level=logging.INFO)
 
@@ -50,6 +51,9 @@ def convert_ai(key: str, llm_model: str, source_format: str, target_format: str,
     elif isinstance(source_data, source_model):
         source_instance = source_data
 
+    source_model_schema = get_schema_summary(source_model, llm_model, key, source_instance)
+
+    # FIXME: create target schema summary and fix up prompts
     strategy = FewShotStrategy()
     messages = strategy.generate_system_prompt(source_instance)
 
