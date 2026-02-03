@@ -1,9 +1,7 @@
-from pydantic import BaseModel
+import litellm, logging, re, json, os
+from pydantic import BaseModel, ValidationError
 from codemeticulous.standards import STANDARDS
-from litellm import completion
-import logging
-import instructor
-from codemeticulous.prompt_strategies import FewShotStrategy
+from codemeticulous.prompt_strategies import DefaultPrompt
 from codemeticulous.summarize_schema import get_schema_summary
 
 logging.basicConfig(level=logging.INFO)
@@ -12,21 +10,52 @@ logging.basicConfig(level=logging.INFO)
 # litellm._turn_on_debug()
 
 
-def structured_completion(llm_model: str, messages: list, target_model: BaseModel, key: str) -> BaseModel | None:
-    client = instructor.from_litellm(completion)
+def extract_json(llm_output: str) -> dict:
+    # Try to extract JSON from markdown code block and disregard it
+    json_match = re.search(r'```json\s*(.*?)\s*```', llm_output, re.DOTALL)
+    
+    if json_match:
+        json_str = json_match.group(1)
+    else:
+        # If no code block found, assume the whole string is JSON obj
+        json_str = llm_output
+    
+    logging.info(f"Extracted JSON string: {json_str}")
+    return json.loads(json_str)
 
+
+def structured_completion(llm_model: str, messages: list, target_model: BaseModel, key: str) -> BaseModel | None:
+    # try:
+    #     client = instructor.from_litellm(completion)
+
+    #     response = client.chat.completions.create(
+    #         model=llm_model,
+    #         response_model=target_model,
+    #         messages=messages,
+    #         api_key=key,
+    #     )
+    #     return response
     try:
-        response = client.chat.completions.create(
+        os.environ["OPENROUTER_API_KEY"] = key #FIXME: avoid setting env var
+
+        response = litellm.completion(
             model=llm_model,
-            response_model=target_model,
             messages=messages,
-            api_key=key,
-            retries=3
+            api_key=key
         )
-        return response
+        output = extract_json(response.choices[0].message.content)
+        logging.info(output)
     except Exception as e:
         logging.error(f"ERROR: structured output failed: {e}") 
         raise
+
+    # Attempt to validate into a pydantic instance of the target model
+    try:
+        return target_model(**output)
+    except ValidationError as e:
+        logging.error(f"Pydantic validation error: {e}")
+        raise
+
 
 def convert_ai(key: str, llm_model: str, source_format: str, target_format: str, source_data):
     """
@@ -51,13 +80,22 @@ def convert_ai(key: str, llm_model: str, source_format: str, target_format: str,
     elif isinstance(source_data, source_model):
         source_instance = source_data
 
-    source_model_schema = get_schema_summary(source_model, llm_model, key, source_instance)
+    # Create summarized schema of source pydantic model according to data instance
+    source_schema_dict = get_schema_summary(source_model, llm_model, key, source_instance)
+    source_schema = json.dumps(source_schema_dict, indent=2)
 
-    # FIXME: create target schema summary and fix up prompts
-    strategy = FewShotStrategy()
-    messages = strategy.generate_system_prompt(source_instance)
+    # Attempt to automatically create JSON string of target pydantic schema, fallback to manually doing it otherwise
+    try:
+        target_schema = target_model.schema_json() 
+    except Exception:
+        logging.warning("Failed to serialize via Pydantic's built-in schema, falling back to manually creating schema")
+        target_schema = get_schema_summary(target_model, llm_model, key)
 
-    # TESTING: instructor structured output
+    target_schema = json.dumps(target_schema, indent=2)
+
+    strategy = DefaultPrompt()
+    messages = strategy.generate_system_prompt(source_instance, source_schema, target_schema)
+
     target_data = structured_completion(llm_model, messages, target_model, key)
 
     return target_data

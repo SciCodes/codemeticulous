@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 import re
 import json
-import csv
+import logging
 import litellm
 
 def generate_desc(model_name: str, data, llm_model: str, api_key: str):
@@ -49,15 +49,25 @@ def get_schema_summary(source_model: type[BaseModel], llm_model: str, api_key: s
         llm_response = match.group(0)
 
     try:
-        output = json.loads(llm_response)
+        field_descriptions = json.loads(llm_response)
+        schema = {
+            "model_name": source_model.__name__,
+            "fields": field_descriptions
+        }
 
-        filename = f"{source_model.__name__}.csv"
-
-        # Create a csv retaining the final schema information
-        with open(filename, "w", newline='') as csvfile:
-          csvwriter = csv.writer(csvfile)
-          csvwriter.writerow(["Field Name", "Field Type", "Description"])
-          csvwriter.writerows(output)
-
+        return schema
     except Exception as e:
-        print(f"ERROR: failed to create list from llm response: ", e)
+        logging.error(f"ERROR: failed to create list from llm response: ", e) 
+
+    # try:
+    #     output = json.loads(llm_response)
+    #     filename = f"{source_model.__name__}.csv"
+
+    #     # Create a csv retaining the final schema information
+    #     with open(filename, "w", newline='') as csvfile:
+    #       csvwriter = csv.writer(csvfile)
+    #       csvwriter.writerow(["Field Name", "Field Type", "Description"])
+    #       csvwriter.writerows(output)
+
+    # except Exception as e:
+    #     print(f"ERROR: failed to create list from llm response: ", e)        
