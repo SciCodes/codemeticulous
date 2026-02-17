@@ -13,3 +13,4 @@ wheels/
 
 *~
 .slim
+.env

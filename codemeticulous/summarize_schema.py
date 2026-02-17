@@ -1,10 +1,13 @@
-from pydantic import BaseModel
 import re
+import csv
 import json
 import logging
 import litellm
+from pydantic import BaseModel
+from pathlib import Path
+from codemeticulous.standards import STANDARDS
 
-def generate_desc(model_name: str, data, llm_model: str, api_key: str):
+def generate_desc(model_name: str, data, llm_model: str) -> str:
     prompt = f"""
     For a Pydantic model '{model_name}', we have a list of lists, each containing a field and their field type. 
 
@@ -19,7 +22,6 @@ def generate_desc(model_name: str, data, llm_model: str, api_key: str):
     try:
         response = litellm.completion(
             messages=[{"role": "user", "content": prompt}],
-            api_key=api_key,
             model=llm_model
         )
         return response.choices[0].message.content.strip()
@@ -28,46 +30,62 @@ def generate_desc(model_name: str, data, llm_model: str, api_key: str):
         raise
 
 
-def get_schema_summary(source_model: type[BaseModel], llm_model: str, api_key: str, instance_data: BaseModel = None):
-    # Generate a nested list of fields and their types
-    fields = []
+def check_schema(model: str, llm_model: str, instance_data: BaseModel = None): 
+    pydantic_model = STANDARDS[model]["model"]
+    schema_file = STANDARDS[model]["schema"]
 
-    for field_name, model_field in source_model.__fields__.items():
-        # if there's an instance and the field isn't referenced in it, skip
-        if instance_data is not None and getattr(instance_data, field_name) is None:
-            continue
+    if schema_file is not None: # iterate through fields if there's an instance that calls for the schema to be pruned
+        with open(schema_file, 'r') as f:
+            schema = json.load(f)
         
-        field_type = model_field.annotation
-        field = [field_name, field_type]
-        fields.append(field)
-
-    llm_response = generate_desc(source_model.__name__, fields, llm_model, api_key) # Call to LLM to generate field's description
-
-    match = re.search(r'\{.*\}|\[.*\]', llm_response, re.DOTALL) # Clean up reponse in case it's wrapped around any unnecessary text/syntax
-
-    if match:
-        llm_response = match.group(0)
-
-    try:
-        field_descriptions = json.loads(llm_response)
-        schema = {
-            "model_name": source_model.__name__,
-            "fields": field_descriptions
-        }
-
+        # TODO: prune if there's instance data
         return schema
-    except Exception as e:
-        logging.error(f"ERROR: failed to create list from llm response: ", e) 
+    
+    else: # check for schema_cache directory, return the data file if its exists
+        cache_directory = Path(__file__).parent.parent / "schema_cache"
+        file = cache_directory / f"{model}.csv"
 
-    # try:
-    #     output = json.loads(llm_response)
-    #     filename = f"{source_model.__name__}.csv"
+        if file.exists():
+            with open(file, 'r') as f:
+                reader = csv.reader(f)
+                next(reader)
+                field_descriptions = [row for row in reader]
+            
+            return {
+                "model_name": model,
+                "fields": field_descriptions
+            }
+            
+        else: # if it doesn't exist, use LLM to generate a csv of schema information
+            fields = []
 
-    #     # Create a csv retaining the final schema information
-    #     with open(filename, "w", newline='') as csvfile:
-    #       csvwriter = csv.writer(csvfile)
-    #       csvwriter.writerow(["Field Name", "Field Type", "Description"])
-    #       csvwriter.writerows(output)
+            for field_name, model_field in pydantic_model.__fields__.items():
+                # if there's an instance and the field isn't referenced in it, skip
+                if instance_data is not None and getattr(instance_data, field_name) is None:
+                    continue
+                field_type = model_field.annotation
+                field = [field_name, field_type]
+                fields.append(field)
 
-    # except Exception as e:
-    #     print(f"ERROR: failed to create list from llm response: ", e)        
+            llm_response = generate_desc(pydantic_model.__name__, fields, llm_model)
+            match = re.search(r'\{.*\}|\[.*\]', llm_response, re.DOTALL) # clean up LLM response
+
+            if match:
+                llm_response = match.group(0)
+
+            try:
+                field_descriptions = json.loads(llm_response)
+
+                # generate a csv retaining the final schema information and store to reuse
+                with open(file, "w", newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(["Field Name", "Field Type", "Description"])
+                    writer.writerows(field_descriptions)
+                
+                return {
+                    "model_name": model,
+                    "fields": field_descriptions
+                }
+            except Exception as e:
+                logging.error(f"ERROR: failed to create list from llm response: ", e)  
+                raise 

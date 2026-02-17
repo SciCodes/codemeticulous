@@ -104,16 +104,15 @@ def load_file_autodetect(file_path: str):
 
 @cli.command()
 @click.option("-m", "--model", "llm_model", required=True, help="LLM model to use")
-@click.option("-k", "--key", "api_key", required=True, help="API key for LLM authorization")
 @click.option("-f", "--from", "source_format", type=click.Choice(tuple(VALIDATION_MODELS)), required=True)
 @click.option("-t", "--to", "target_format", type=click.Choice(tuple(VALIDATION_MODELS)), required=True)
 @click.option("-o", "--output", "output_file", type=click.File("w"), default=None)
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @click.argument("input_file", type=click.Path(exists=True))
-def ai_convert(llm_model, api_key, source_format, target_format, input_file, output_file, verbose):
+def ai_convert(llm_model, source_format, target_format, input_file, output_file, verbose):
     try:
         input_data = load_file_autodetect(input_file)
-        converted_data = _convert_ai(api_key, llm_model, source_format, target_format, input_data)
+        converted_data = _convert_ai(llm_model, source_format, target_format, input_data)
         output_data = dump_data(converted_data, target_format)
     except (OSError, ValueError, ValidationError) as exc:
         if verbose:

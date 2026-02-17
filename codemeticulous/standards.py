@@ -11,17 +11,20 @@ STANDARDS = {
         "format": "json",
         "to_canonical": codemeta_to_canonical,
         "from_canonical": canonical_to_codemeta,
+        "schema": None
     },
     "datacite": {
         "model": DataCite,
         "format": "json",
         "to_canonical": datacite_to_canonical,
         "from_canonical": canonical_to_datacite,
+        "schema": "schema/datacite/schema46.json"
     },
     "cff": {
         "model": CitationFileFormat,
         "format": "yaml",
         "to_canonical": cff_to_canonical,
         "from_canonical": canonical_to_cff,
+        "schema": "schema/cff/1.2.0/schema.json"
     },
 }
