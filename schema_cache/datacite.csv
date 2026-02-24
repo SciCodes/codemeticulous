@@ -1,0 +1,27 @@
+Field,Type,Description
+doi,DOI String,The Digital Object Identifier (DOI) for the resource. It is a persistent identifier used to uniquely identify objects.
+prefix,Text,"The prefix part of the DOI, assigned by a registration agency. This field is used when minting a new DOI."
+suffix,Text,"The suffix part of the DOI, chosen by the client to uniquely identify the resource. This field is used when minting a new DOI."
+event,Event,"The event state of the DOI, such as 'draft', 'registered', or 'findable'. It determines the DOI's publication status."
+url,URL,The URL of the landing page for the resource that the DOI resolves to. This is a mandatory field for making a DOI findable.
+types,Resource Type,"Information about the type of the resource. It includes a general type from a controlled list (e.g., Software, Dataset) and an optional free-text description."
+creators,List of Creators,"The main researchers or authors involved in producing the resource, in priority order. Each creator can be a person or an organization."
+titles,List of Titles,The names or titles by which the resource is known. At least one main title is required.
+publisher,Publisher,"The name of the entity that holds, archives, publishes, or otherwise distributes the resource. This is typically an organization."
+publicationYear,Year,The year when the resource was or will be made publicly available. This must be a four-digit year.
+subjects,List of Subjects,"Subjects, keywords, classification codes, or key phrases describing the resource. This helps with discoverability."
+contributors,List of Contributors,"Institutions or persons responsible for collecting, managing, or otherwise contributing to the resource. Each contributor has a specific role."
+dates,List of Dates,"Different dates relevant to the resource, such as creation, publication, or update dates. Each date entry must have a type indicating its meaning."
+language,Language,"The primary language of the resource, specified using an IETF BCP 47 language tag."
+alternateIdentifiers,List of Alternate Identifiers,"Any other identifiers for the resource, such as a local identifier or a URL to a code repository."
+relatedIdentifiers,List of Related Identifiers,"Identifiers of related resources, along with the nature of the relationship (e.g., 'IsPartOf', 'HasVersion', 'Cites')."
+relatedItems,List of Related Items,Information about related resources that are not identified by a formal persistent identifier. This can include descriptive text about the related item.
+sizes,List of Text,"Unstructured size information about the resource, such as '15 MiB' or '100 pages'."
+formats,List of Text,"Technical format of the resource, preferably using IANA media types like 'application/json' or 'text/csv'."
+version,Version String,The version number of the resource. It is recommended to use semantic versioning where appropriate.
+rightsList,List of Rights Information,"Information about rights held in and over the resource, such as a license. It is recommended to use an SPDX license identifier and URI."
+descriptions,List of Descriptions,"Different descriptions for the resource, such as an abstract or table of contents. Each description must have a type indicating its nature."
+geoLocations,List of Geographic Locations,"Spatial regions or named places where the data was collected or is about. Can be a point, a bounding box, or a polygon."
+fundingReferences,List of Funding References,"Information about financial support (funding) for the resource. This includes the funder name, award information, and funder identifier."
+schemaVersion,Schema URL,"The URI of the DataCite metadata schema used. For this model, the value is fixed to the DataCite Kernel v4 schema URL."
+container,Container,"Information about the larger resource that contains this resource, such as a journal or a book series. This property helps create parent-child relationships."

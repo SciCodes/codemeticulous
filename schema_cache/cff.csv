@@ -1,0 +1,22 @@
+Field,Type,Description
+abstract,Text,A short summary of the work. This helps users quickly understand the software's purpose.
+authors,List of Person or Organization,"The creators of the software. Each author can be an individual person or a group, such as a research institution or company."
+cff_version,Text,The version of the Citation File Format standard used in this file. It ensures the file is interpreted correctly by tools.
+commit,Text,The specific commit hash from the version control system for this version of the software. This provides a precise reference to the code.
+contact,List of Person or Organization,The individuals or groups to contact for support or inquiries about the software. This helps direct communication to the right people.
+date_released,Date,The date when this version of the software was made publicly available. This corresponds to the Schema.org 'datePublished' property.
+doi,DOI,The Digital Object Identifier (DOI) for the software version. A DOI provides a persistent and unique link to the work.
+identifiers,List of Identifiers,"A list of other unique identifiers for the software, such as a SWHID or an archive URL. This helps in uniquely identifying and locating the work."
+keywords,List of Text,A list of keywords or tags that describe the software. These help with discovery and categorization.
+license,License,"The license under which the software is provided, typically as a standard SPDX identifier. This informs users of the permissions and restrictions."
+license_url,URL,A URL pointing to the full text of the software's license. This provides users with the specific legal terms.
+message,Text,"A required message for users, typically instructing them on how to cite the software. For example: ""If you use this software, please cite it as below."""
+preferred_citation,Citation,"A specific reference that the authors prefer to be cited, such as a paper describing the software. This guides users to the most appropriate citation."
+references,List of Citations,"A list of relevant publications or other works related to the software. These could be papers that use, describe, or are built upon by the software."
+repository,URL,"The URL of a public repository where a version of the software is archived, such as on Zenodo or Figshare. This points to a citable, preserved copy."
+repository_artifact,URL,"The URL of a specific build or package of the software, such as a JAR file, container image, or wheel. This points to a runnable or installable version."
+repository_code,URL,"The URL of the source code repository for the software. This is typically a link to a platform like GitHub, GitLab, or Bitbucket."
+title,Text,The official name of the software being cited. This serves as the primary human-readable identifier for the work.
+type,Text,"The type of the work being cited, which must be 'software'. This clarifies the nature of the cited entity."
+url,URL,The URL of the software's project website or landing page. This provides a general entry point for information about the software.
+version,Version,The version number of the software being cited. This should ideally follow a standard like Semantic Versioning.

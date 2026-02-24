@@ -15,6 +15,7 @@ from codemeticulous.convert import (
 )
 from codemeticulous.conversion import ConversionError
 from codemeticulous.ai_convert import convert_ai as _convert_ai
+from codemeticulous.generate_schemas import generate_schemas as _generate_schemas
 
 
 @click.group()
@@ -122,3 +123,12 @@ def ai_convert(llm_model, source_format, target_format, input_file, output_file,
         output_file.write(output_data)
     else:
         click.echo(output_data)
+
+
+@cli.command()
+@click.option("-m", "--model", "llm_model", required=True, help="LLM model to use")
+def generate_schemas(llm_model: str) -> None:
+    try:
+        _generate_schemas(llm_model)
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc

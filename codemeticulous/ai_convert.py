@@ -2,18 +2,15 @@ import litellm
 import logging
 import re
 import json
-from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 from codemeticulous.standards import STANDARDS
 from codemeticulous.prompt_strategies import DefaultPrompt
-from codemeticulous.summarize_schema import check_schema
+from codemeticulous.generate_schemas import check_schema
 
 logging.basicConfig(level=logging.INFO)
-load_dotenv()
 
 # Toggle for additional llm debugging
 # litellm._turn_on_debug()
-
 
 def extract_json(llm_output: str) -> dict:
     # Try to extract JSON from markdown code block and disregard it
@@ -28,22 +25,37 @@ def extract_json(llm_output: str) -> dict:
 
 
 def structured_completion(llm_model: str, messages: list, target_model: BaseModel) -> BaseModel | None:
-    try:
-        response = litellm.completion(
-            model=llm_model,
-            messages=messages,
-        )
-        output = extract_json(response.choices[0].message.content)
-        # logging.info(output)
-    except Exception as e:
-        logging.error(f"ERROR: structured output failed: {e}") 
-        raise
+    max_retries = 3 # sets limit on retries if llm's output has validation errors
 
-    try:
-        return target_model(**output)
-    except ValidationError as e: #TODO: add llm retries if there's validation errors
-        logging.error(f"Pydantic validation error: {e}")
-        raise
+    for attempt in range(max_retries):
+        try:
+            response = litellm.completion(
+                model=llm_model,
+                messages=messages,
+            )
+            output = extract_json(response.choices[0].message.content)
+            validated_model = target_model(**output)
+            return validated_model
+        except ValidationError as e:
+            logging.warning(f"Pydantic validation error on attempt {attempt}: {e}")
+            
+            if attempt < max_retries - 1:
+                error_msg = {
+                    "role": "user",
+                    "content": f"""
+                    There were Pydantic validation errors on the previous attempt converting the data:
+                    {str(e)}
+
+                    Please refer to these error logs to fix the issues and try again.
+                    """
+                }
+                messages.append(error_msg)
+            else:
+                logging.error(f"ERROR: LLM had validation failures after {max_retries}")
+                raise
+        except Exception as e:
+            logging.error(f"ERROR: LLM completion call failed: {e}")
+            raise
 
 
 def convert_ai(llm_model: str, source_format: str, target_format: str, source_data):
@@ -69,12 +81,11 @@ def convert_ai(llm_model: str, source_format: str, target_format: str, source_da
         source_instance = source_data
 
     # Create summarized schema of source pydantic model according to data instance
-    source_schema_dict = check_schema(source_format, llm_model, source_instance)
+    source_schema_dict = check_schema(source_format, source_instance)
     source_schema = json.dumps(source_schema_dict, indent=2)
 
-    target_schema = check_schema(target_format, llm_model)
+    target_schema = check_schema(target_format)
     target_schema = json.dumps(target_schema, indent=2)
-    # logging.info(target_schema)
 
     strategy = DefaultPrompt()
     messages = strategy.generate_system_prompt(source_instance, source_schema, target_schema)
