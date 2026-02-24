@@ -67,3 +67,15 @@ and supports format-specific validation for CodeMeta, CFF, and DataCite.
 ```bash
 uv run python -m pytest -q
 ```
+
+## Experimental AI mode
+
+AI conversion can use a configured LLM provider to convert between CodeMeta, CFF,
+and DataCite. Set the provider's API key in your environment, then run:
+
+```bash
+codemeticulous ai-convert --model <provider/model> --from codemeta --to cff codemeta.json > CITATION.cff
+```
+
+Run `codemeticulous generate-schemas --model <provider/model>` to refresh the
+schema descriptions used in prompts.
