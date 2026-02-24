@@ -37,9 +37,9 @@ def structured_completion(llm_model: str, messages: list, target_model: BaseMode
             validated_model = target_model(**output)
             return validated_model
         except ValidationError as e:
-            logging.warning(f"Pydantic validation error on attempt {attempt}: {e}")
+            logging.warning(f"Pydantic validation error on attempt {attempt + 1}: {e}")
             
-            if attempt < max_retries - 1:
+            if attempt < max_retries - 1: #TODO: add what the previous output was?
                 error_msg = {
                     "role": "user",
                     "content": f"""

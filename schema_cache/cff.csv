@@ -10,7 +10,7 @@ identifiers,List of Identifiers,"A list of other unique identifiers for the soft
 keywords,List of Text,A list of keywords or tags that describe the software. These help with discovery and categorization.
 license,License,"The license under which the software is provided, typically as a standard SPDX identifier. This informs users of the permissions and restrictions."
 license_url,URL,A URL pointing to the full text of the software's license. This provides users with the specific legal terms.
-message,Text,"A required message for users, typically instructing them on how to cite the software. For example: ""If you use this software, please cite it as below."""
+message,Text,"A message to the human reader of the file to let them know what to do with the citation metadata. Example: ""If you use this software, please cite it using the metadata from this file."""
 preferred_citation,Citation,"A specific reference that the authors prefer to be cited, such as a paper describing the software. This guides users to the most appropriate citation."
 references,List of Citations,"A list of relevant publications or other works related to the software. These could be papers that use, describe, or are built upon by the software."
 repository,URL,"The URL of a public repository where a version of the software is archived, such as on Zenodo or Figshare. This points to a citable, preserved copy."

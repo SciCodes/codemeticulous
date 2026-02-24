@@ -37,7 +37,7 @@ def llm_descriptions(model_name: str, data, llm_model: str) -> str:
         print(f"ERROR: structured output failed: {e}") 
         raise
 
-
+# TODO: move toggle to use defined schema json files here
 def generate_schemas(llm_model: str):
     # iterate through all schemas in STANDARDS and create csv files to cache
     for format, info in STANDARDS.items():
