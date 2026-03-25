@@ -21,6 +21,7 @@ dev = [
     "black>=24.8.0",
     "datamodel-code-generator>=0.26.2",
     "pytest>=8.3.3",
+    "pytest-check>=2.8.0",
 ]
 
 [build-system]
