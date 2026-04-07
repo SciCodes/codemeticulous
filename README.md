@@ -79,3 +79,9 @@ codemeticulous ai-convert --model <provider/model> --from codemeta --to cff code
 
 Run `codemeticulous generate-schemas --model <provider/model>` to refresh the
 schema descriptions used in prompts.
+
+AI evaluation tests require a configured provider and can be run separately:
+
+```bash
+uv run pytest tests_llm/
+```

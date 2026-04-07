@@ -2,6 +2,7 @@ import litellm
 import logging
 import re
 import json
+import ast
 from pydantic import BaseModel, ValidationError
 from codemeticulous.standards import STANDARDS
 from codemeticulous.prompt_strategies import DefaultPrompt
@@ -25,8 +26,8 @@ def extract_json(llm_output: str) -> dict:
     try:
         return json.loads(json_str)
     except json.JSONDecodeError:
+        logging.error(f"ERROR: failed to decode JSON from LLM output: {json_str}")
         # Try to fix single-quoted keys/values produced by the LLM
-        import ast
         return ast.literal_eval(json_str)
 
 
@@ -38,6 +39,7 @@ def structured_completion(llm_model: str, messages: list, target_model: BaseMode
             response = litellm.completion(
                 model=llm_model,
                 messages=messages,
+                temperature=0.3
             )
             output = extract_json(response.choices[0].message.content)
             validated_model = target_model(**output)

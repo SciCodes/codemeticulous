@@ -1,0 +1,13 @@
+timestamp,model,source,target,file,runtime,passed,violations,logical,llm
+2026-04-07 11:24:42,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,codemetar.json,5.78,False,Missing field 'identifiers',"[{'type': 'other', 'value': 'codemetar'}]",(missing)
+2026-04-07 11:24:43,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,creator.json,1.92,False,Missing field 'type',software,(missing)
+2026-04-07 11:24:47,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,context.json,3.15,True,,,
+2026-04-07 11:25:33,openrouter/anthropic/claude-sonnet-4-6,codemeta,datacite,chime.json,46.57,False,Value at 'formats[0]' not found,'Logo',[]
+2026-04-07 11:56:14,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,codemetar.json,6.83,False,Missing field 'identifiers',"[{'type': 'other', 'value': 'codemetar'}]",(missing)
+2026-04-07 11:56:17,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,creator.json,2.48,True,,,
+2026-04-07 11:56:20,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,context.json,2.85,True,,,
+2026-04-07 11:57:00,openrouter/anthropic/claude-sonnet-4-6,codemeta,datacite,chime.json,40.32,False,Value at 'formats[0]' not found,'Logo',[]
+2026-04-07 12:37:27,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,codemetar.json,7.49,False,Missing field 'identifiers',"[{'type': 'other', 'value': 'codemetar'}]",(missing)
+2026-04-07 12:37:31,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,creator.json,4.68,False,Missing field 'type',software,(missing)
+2026-04-07 12:37:35,openrouter/anthropic/claude-sonnet-4-6,codemeta,cff,context.json,3.22,True,,,
+2026-04-07 12:38:16,openrouter/anthropic/claude-sonnet-4-6,codemeta,datacite,chime.json,41.55,False,Value at 'formats[0]' not found,'Logo',[]

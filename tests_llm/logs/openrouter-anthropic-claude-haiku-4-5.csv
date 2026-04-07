@@ -1,0 +1,9 @@
+timestamp,model,source,target,file,runtime,passed,violations,logical,llm
+2026-04-07 11:25:45,openrouter/anthropic/claude-haiku-4-5,codemeta,cff,codemetar.json,11.95,False,Missing field 'identifiers',"[{'type': 'other', 'value': 'codemetar'}]",(missing)
+2026-04-07 11:25:51,openrouter/anthropic/claude-haiku-4-5,codemeta,cff,creator.json,5.92,True,,,
+2026-04-07 11:25:55,openrouter/anthropic/claude-haiku-4-5,codemeta,cff,context.json,3.37,True,,,
+2026-04-07 11:26:17,openrouter/anthropic/claude-haiku-4-5,codemeta,datacite,chime.json,22.17,False,Value at 'formats[0]' not found,'Logo',[]
+2026-04-07 12:53:36,openrouter/anthropic/claude-haiku-4-5,codemeta,cff,codemetar.json,6.48,False,Missing field 'identifiers',"[{'type': 'other', 'value': 'codemetar'}]",(missing)
+2026-04-07 12:53:39,openrouter/anthropic/claude-haiku-4-5,codemeta,cff,creator.json,2.44,True,,,
+2026-04-07 12:53:41,openrouter/anthropic/claude-haiku-4-5,codemeta,cff,context.json,2.21,True,,,
+2026-04-07 12:54:02,openrouter/anthropic/claude-haiku-4-5,codemeta,datacite,chime.json,20.76,True,,,

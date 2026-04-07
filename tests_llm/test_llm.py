@@ -1,6 +1,7 @@
 import json
-from pytest_check import check
+import time
 from pathlib import Path
+from datetime import datetime
 
 from .conftest import discover_test_files
 from codemeticulous.convert import convert
@@ -11,22 +12,51 @@ TEST_DATA_DIR = Path(__file__).parent.parent / "tests" / "data"
 
 CONVERSION_MAP = {
     "codemeta": {
-        "cff": [
-            # cff requires authors
+        "cff": [ # cff requires authors
             "codemetar.json",
             "context.json",
             "creator.json",
+            # "chime.json"
         ],
-        "datacite": [
-            # datacite metadata requires creators, title, publisher, publication year
+        "datacite": [ # datacite metadata requires creators, title, publisher, publication year
             "chime.json",
+            # "artificial-anasazi.json",
+            # "invenordm.json"
         ],
     }
 }
 
+PROVIDER_CONFIG = {
+    "openrouter_llm": {
+        "prefix": "openrouter/",
+        "models": [
+            "google/gemini-2.5-pro",
+            "openai/gpt-4o",
+            "anthropic/claude-sonnet-4-6",
+            "mistralai/mistral-large",
+            "deepseek/deepseek-chat",
+            # Mid-tier
+            "google/gemini-2.0-flash-001",
+            "openai/gpt-4o-mini",
+            "qwen/qwen-2.5-72b-instruct",
+            "meta-llama/llama-3.3-70b-instruct",
+            # Lightweight
+            "anthropic/claude-haiku-4-5",
+        ]
+    },
+}
+
 
 def pytest_generate_tests(metafunc):
-    if "ai_test_case" in metafunc.fixturenames:
+    if "llm_model" in metafunc.fixturenames:
+        models = [
+            provider["prefix"] + model
+            for provider in PROVIDER_CONFIG.values()
+            for model in provider["models"]
+        ]
+        metafunc.parametrize("llm_model", models, ids=models)
+
+    if "test_case" in metafunc.fixturenames:
         test_cases = []
         test_ids = []
 
@@ -40,20 +70,26 @@ def pytest_generate_tests(metafunc):
                         test_cases.append((source_format, target_name, file_path))
                         test_ids.append(f"convert {source_format} -> {target_name} ({file_path.name})")
 
-        metafunc.parametrize("ai_test_case", test_cases, ids=test_ids)
+        metafunc.parametrize("test_case", test_cases, ids=test_ids)
 
 
-def fields_are_superset(baseline: dict, ai_result: dict, path: str = "") -> list[str]:
+def fields_are_superset(baseline: dict, ai_result: dict, path: str = "") -> list[dict]:
     diffs = []
 
     for key, baseline_val in baseline.items():
         full_path = f"{path}.{key}" if path else key
 
-        # 1st check to see if any fields in logical convesion isn't in the llm's conversion
+        # 1st check to see if any fields in logical conversion isn't in the llm's conversion
         if key not in ai_result:
-            diffs.append(f"Missing field '{full_path}' in AI conversion")
+            diffs.append({
+                "description": f"Missing field '{full_path}'",
+                "logical": str(baseline_val),
+                "llm": "(missing)",
+            })
             continue
+
         ai_val = ai_result[key]
+
         if isinstance(baseline_val, dict) and isinstance(ai_val, dict):
             diffs.extend(fields_are_superset(baseline_val, ai_val, full_path))
         elif isinstance(baseline_val, list) and isinstance(ai_val, list):
@@ -61,29 +97,34 @@ def fields_are_superset(baseline: dict, ai_result: dict, path: str = "") -> list
                 item_path = f"{full_path}[{i}]"
                 if isinstance(b_item, dict):
                     matched = any(
-                        not fields_are_superset(b_item, a_item) # ignores priority in lists for certain fields
+                        not fields_are_superset(b_item, a_item)  # ignores priority in lists for certain fields
                         for a_item in ai_val
                         if isinstance(a_item, dict)
                     )
                     if not matched:
-                        diffs.append(
-                            f"No match found in AI result for baseline item at '{item_path}':\n"
-                            f"    baseline: {b_item}\n"
-                            f"    ai result: {ai_val}"
-                        )
-                else:
+                        ai_dicts = [a for a in ai_val if isinstance(a, dict)]
+                        if ai_dicts:
+                            closest = min(ai_dicts, key=lambda a: len(fields_are_superset(b_item, a)))
+                            sub_diffs = fields_are_superset(b_item, closest, item_path)
+                            diffs.extend(sub_diffs)
+                        else:
+                            diffs.append({
+                                "description": f"No dict items in LLM result for '{item_path}'",
+                                "logical": str(b_item),
+                                "llm": str(ai_val),
+                            })
+                else:  # deals with all other types other than dicts
                     if b_item not in ai_val:
-                        diffs.append(
-                            f"Baseline value at '{item_path}' not found in AI result list:\n"
-                            f"    baseline: {b_item!r}\n"
-                            f"    ai result: {ai_val!r}"
-                        )
+                        diffs.append({
+                            "description": f"Value at '{item_path}' not found",
+                            "logical": repr(b_item),
+                            "llm": repr(ai_val),
+                        })
     return diffs
 
 
-# FIXME: refactor to implement soft assert some complex fields, display diff for manual review
-def test_ai_convert(ai_test_case, llm_model):
-    source_format, target_format, file_path = ai_test_case
+def test_ai_convert(test_case, llm_model, run_log):
+    source_format, target_format, file_path = test_case
 
     print(f"Testing conversion from {source_format} to {target_format} with {file_path}")
 
@@ -91,17 +132,42 @@ def test_ai_convert(ai_test_case, llm_model):
         source_data = json.load(f)
 
     baseline = convert(source_format, target_format, source_data)
-    ai_result = convert_ai(llm_model, source_format, target_format, source_data)
 
-    assert ai_result is not None, "AI conversion returned None"
+
+    # track runtime of all test cases, maybe will change to per llm call for more precision
+    start = time.time()
+    llm_result = convert_ai(llm_model, source_format, target_format, source_data) # note that if llm times out after 3 attempts, it won't be logged
+    elapsed = round(time.time() - start, 2)
+
+    assert llm_result is not None, "LLM conversion returned None"
 
     baseline_dict = baseline.dict(serialize=True)
-    ai_dict = ai_result.dict(serialize=True)
-
-    print(ai_dict)
+    ai_dict = llm_result.dict(serialize=True)
 
     violations = fields_are_superset(baseline_dict, ai_dict)
+    
+    sep = " ||| "
+
+    # document test run into logs (based on LLM model)
+    run_log.append({
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "model": llm_model,
+        "source": source_format,
+        "target": target_format,
+        "file": file_path.name,
+        "runtime": elapsed,
+        "passed": len(violations) == 0,
+        "violations": sep.join(v["description"] for v in violations),
+        "logical": sep.join(v["logical"] for v in violations),
+        "llm": sep.join(v["llm"] for v in violations),
+    })
+
     assert not violations, (
-        f"AI result for '{file_path.name}' ({source_format} -> {target_format}) is missing {len(violations)} baseline fields:\n"
-        + "\n".join(f"  - {v}" for v in violations)
+        f"LLM result for '{file_path.name}' ({source_format} -> {target_format}) is missing {len(violations)} logical conversion fields:\n"
+        + "\n\n".join(
+            f"  {i+1}. {v['description']}\n"
+            f"      logical: {v['logical']}\n"
+            f"      llm:     {v['llm']}"
+            for i, v in enumerate(violations)
+        )
     )
