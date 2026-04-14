@@ -1,0 +1,91 @@
+[
+  {
+    "timestamp": "2026-04-14 12:55:18",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 4.81,
+    "prompt_tokens": 9617,
+    "completion_tokens": 445,
+    "passed": false,
+    "codemeta:identifiers": {
+      "target": "cff:identifiers",
+      "violations": [
+        {
+          "title": "Missing field 'identifiers'",
+          "expected": "[{'type': 'other', 'value': 'codemetar'}]",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 12:55:21",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 3.04,
+    "prompt_tokens": 7014,
+    "completion_tokens": 117,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 12:55:24",
+    "file": "context.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 3.57,
+    "prompt_tokens": 7014,
+    "completion_tokens": 117,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:07:27",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 4.27,
+    "prompt_tokens": 9803,
+    "completion_tokens": 431,
+    "passed": false,
+    "codemeta:authors": {
+      "target": "cff:authors",
+      "violations": [
+        {
+          "title": "Missing field 'authors[0].family-names'",
+          "expected": "Boettiger",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'authors[0].given-names'",
+          "expected": "Carl",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:identifiers": {
+      "target": "cff:identifiers",
+      "violations": [
+        {
+          "title": "Missing field 'identifiers'",
+          "expected": "[{'type': 'other', 'value': 'codemetar'}]",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 13:07:30",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 2.67,
+    "prompt_tokens": 7021,
+    "completion_tokens": 126,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:07:32",
+    "file": "context.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 2.14,
+    "prompt_tokens": 7077,
+    "completion_tokens": 117,
+    "passed": true
+  }
+]

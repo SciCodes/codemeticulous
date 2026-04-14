@@ -1,0 +1,88 @@
+[
+  {
+    "timestamp": "2026-04-14 13:10:30",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 38.0,
+    "prompt_tokens": 10236,
+    "completion_tokens": 630,
+    "passed": false,
+    "codemeta:authors": {
+      "target": "cff:authors",
+      "violations": [
+        {
+          "title": "Missing field 'authors[0].email'",
+          "expected": "cboettig@gmail.com",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'authors[0].family-names'",
+          "expected": "Boettiger",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'authors[0].given-names'",
+          "expected": "Carl",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:identifiers": {
+      "target": "cff:identifiers",
+      "violations": [
+        {
+          "title": "Missing field 'identifiers'",
+          "expected": "[{'type': 'other', 'value': 'codemetar'}]",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 13:10:37",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 7.4,
+    "prompt_tokens": 3476,
+    "completion_tokens": 71,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:10:42",
+    "file": "context.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 5.14,
+    "prompt_tokens": 7123,
+    "completion_tokens": 130,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:13:07",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 144.78,
+    "prompt_tokens": 19238,
+    "completion_tokens": 2907,
+    "passed": false,
+    "codemeta:creators": {
+      "target": "datacite:creators",
+      "violations": [
+        {
+          "title": "Missing field 'creators[0].nameIdentifiers[0].schemeUri'",
+          "expected": "https://orcid.org/",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:formats": {
+      "target": "datacite:formats",
+      "violations": [
+        {
+          "title": "Value at 'formats[0]' doesn't match",
+          "expected": "'Logo'",
+          "llm_output": "[]"
+        }
+      ]
+    }
+  }
+]

@@ -1,5 +1,0 @@
-timestamp,model,source,target,file,runtime,passed,violations,logical,llm
-2026-04-07 12:41:07,openrouter/deepseek/deepseek-chat,codemeta,cff,codemetar.json,34.65,False,Missing field 'authors[0].email' ||| Missing field 'authors[0].family-names' ||| Missing field 'authors[0].given-names',cboettig@gmail.com ||| Boettiger ||| Carl,(missing) ||| (missing) ||| (missing)
-2026-04-07 12:41:10,openrouter/deepseek/deepseek-chat,codemeta,cff,creator.json,3.26,True,,,
-2026-04-07 12:41:19,openrouter/deepseek/deepseek-chat,codemeta,cff,context.json,8.9,True,,,
-2026-04-07 12:43:14,openrouter/deepseek/deepseek-chat,codemeta,datacite,chime.json,115.06,False,Missing field 'creators[0].nameIdentifiers[0].schemeUri' ||| Value at 'formats[0]' not found,https://orcid.org/ ||| 'Logo',(missing) ||| []

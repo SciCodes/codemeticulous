@@ -1,4 +1,5 @@
 import json
+import re
 import time
 from pathlib import Path
 from datetime import datetime
@@ -7,7 +8,7 @@ from .conftest import discover_test_files
 from codemeticulous.convert import convert
 from codemeticulous.ai_convert import convert_ai
 
-# NOTE: testing is currently configured to only evaluate converting from codemeta
+# NOTE: testing is configured to only evaluate conversion from codemeta to compare against logical conversion
 TEST_DATA_DIR = Path(__file__).parent.parent / "tests" / "data"
 
 CONVERSION_MAP = {
@@ -30,16 +31,17 @@ PROVIDER_CONFIG = {
     "openrouter_llm": {
         "prefix": "openrouter/",
         "models": [
+            # Advanced
             "google/gemini-2.5-pro",
             "openai/gpt-4o",
             "anthropic/claude-sonnet-4-6",
             "mistralai/mistral-large",
             "deepseek/deepseek-chat",
             # Mid-tier
-            "google/gemini-2.0-flash-001",
-            "openai/gpt-4o-mini",
-            "qwen/qwen-2.5-72b-instruct",
-            "meta-llama/llama-3.3-70b-instruct",
+            # "google/gemini-2.0-flash-001",
+            # "openai/gpt-4o-mini",
+            # "qwen/qwen-2.5-72b-instruct",
+            # "meta-llama/llama-3.3-70b-instruct",
             # Lightweight
             "anthropic/claude-haiku-4-5",
         ]
@@ -116,7 +118,7 @@ def fields_are_superset(baseline: dict, ai_result: dict, path: str = "") -> list
                 else:  # deals with all other types other than dicts
                     if b_item not in ai_val:
                         diffs.append({
-                            "description": f"Value at '{item_path}' not found",
+                            "description": f"Value at '{item_path}' doesn't match",
                             "logical": repr(b_item),
                             "llm": repr(ai_val),
                         })
@@ -126,17 +128,16 @@ def fields_are_superset(baseline: dict, ai_result: dict, path: str = "") -> list
 def test_ai_convert(test_case, llm_model, run_log):
     source_format, target_format, file_path = test_case
 
-    print(f"Testing conversion from {source_format} to {target_format} with {file_path}")
+    print(f"\n{llm_model} conversion from {source_format} to {target_format} with {file_path}")
 
     with open(file_path, "r") as f:
         source_data = json.load(f)
 
     baseline = convert(source_format, target_format, source_data)
 
-
-    # track runtime of all test cases, maybe will change to per llm call for more precision
+    # track runtime per ai conversion
     start = time.time()
-    llm_result = convert_ai(llm_model, source_format, target_format, source_data) # note that if llm times out after 3 attempts, it won't be logged
+    llm_result, usage = convert_ai(llm_model, source_format, target_format, source_data) # note that if llm times out after 3 attempts, it won't be logged
     elapsed = round(time.time() - start, 2)
 
     assert llm_result is not None, "LLM conversion returned None"
@@ -145,22 +146,43 @@ def test_ai_convert(test_case, llm_model, run_log):
     ai_dict = llm_result.dict(serialize=True)
 
     violations = fields_are_superset(baseline_dict, ai_dict)
-    
-    sep = " ||| "
 
-    # document test run into logs (based on LLM model)
-    run_log.append({
+    # grouping violations by top-level field name from the description
+    violations_by_field: dict[str, list] = {}
+    for v in violations:
+        m = re.search(r"'([^']+)'", v["description"])
+        top_field = re.split(r"[.\[]", m.group(1))[0] if m else "unknown"
+        violations_by_field.setdefault(top_field, []).append(v)
+
+    entry = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "model": llm_model,
-        "source": source_format,
-        "target": target_format,
         "file": file_path.name,
-        "runtime": elapsed,
+        "source:target": f"{source_format}:{target_format}",
+        "runtime_sec": elapsed,
+        # "cost": usage["cost"],
+        "prompt_tokens": usage["prompt_tokens"],
+        "completion_tokens": usage["completion_tokens"],
         "passed": len(violations) == 0,
-        "violations": sep.join(v["description"] for v in violations),
-        "logical": sep.join(v["logical"] for v in violations),
-        "llm": sep.join(v["llm"] for v in violations),
-    })
+    }
+
+    # logs only top level fields that have differences from logical conversion
+    for field, baseline_val in baseline_dict.items():
+        field_violations = violations_by_field.get(field, [])
+        if not field_violations:
+            continue
+        entry[f"{source_format}:{field}"] = {
+            "target": f"{target_format}:{field}",
+            "violations": [
+                {
+                    "desc": v["description"],
+                    "expected": v["logical"],
+                    "llm_output": v["llm"],
+                }
+                for v in field_violations
+            ],
+        }
+
+    run_log.append(entry)
 
     assert not violations, (
         f"LLM result for '{file_path.name}' ({source_format} -> {target_format}) is missing {len(violations)} logical conversion fields:\n"

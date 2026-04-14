@@ -1,0 +1,134 @@
+[
+  {
+    "timestamp": "2026-04-14 12:55:42",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 5.91,
+    "prompt_tokens": 5432,
+    "completion_tokens": 356,
+    "passed": false,
+    "codemeta:identifiers": {
+      "target": "cff:identifiers",
+      "violations": [
+        {
+          "title": "Missing field 'identifiers'",
+          "expected": "[{'type': 'other', 'value': 'codemetar'}]",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 12:55:44",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 1.98,
+    "prompt_tokens": 4086,
+    "completion_tokens": 81,
+    "passed": false,
+    "codemeta:type": {
+      "target": "cff:type",
+      "violations": [
+        {
+          "title": "Missing field 'type'",
+          "expected": "software",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 12:55:47",
+    "file": "context.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 2.65,
+    "prompt_tokens": 4087,
+    "completion_tokens": 90,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 12:56:34",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 47.26,
+    "prompt_tokens": 13688,
+    "completion_tokens": 3695,
+    "passed": false,
+    "codemeta:formats": {
+      "target": "datacite:formats",
+      "violations": [
+        {
+          "title": "Value at 'formats[0]' doesn't match",
+          "expected": "'Logo'",
+          "llm_output": "[]"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 13:07:53",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 7.28,
+    "prompt_tokens": 5432,
+    "completion_tokens": 356,
+    "passed": false,
+    "codemeta:identifiers": {
+      "target": "cff:identifiers",
+      "violations": [
+        {
+          "title": "Missing field 'identifiers'",
+          "expected": "[{'type': 'other', 'value': 'codemetar'}]",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 13:07:57",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 3.65,
+    "prompt_tokens": 4086,
+    "completion_tokens": 81,
+    "passed": false,
+    "codemeta:type": {
+      "target": "cff:type",
+      "violations": [
+        {
+          "title": "Missing field 'type'",
+          "expected": "software",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 13:07:59",
+    "file": "context.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 2.34,
+    "prompt_tokens": 4087,
+    "completion_tokens": 90,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:08:38",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 38.47,
+    "prompt_tokens": 13547,
+    "completion_tokens": 3413,
+    "passed": false,
+    "codemeta:formats": {
+      "target": "datacite:formats",
+      "violations": [
+        {
+          "title": "Value at 'formats[0]' doesn't match",
+          "expected": "'Logo'",
+          "llm_output": "[]"
+        }
+      ]
+    }
+  }
+]

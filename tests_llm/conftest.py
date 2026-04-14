@@ -1,6 +1,5 @@
-import csv
+import json
 import pytest
-from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -16,14 +15,11 @@ def run_log(llm_model):
 
     LOGS_DIR.mkdir(exist_ok=True)
     model_name = llm_model.replace("/", "-")
-    log_path = LOGS_DIR / f"{model_name}.csv"
+    json_path = LOGS_DIR / f"{model_name}.json"
 
-    write_header = not log_path.exists()
-    with open(log_path, "a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["timestamp", "model", "source", "target", "file", "runtime", "passed", "violations", "logical", "llm"])
-        if write_header:
-            writer.writeheader()
-        writer.writerows(results)
+    existing = json.loads(json_path.read_text()) if json_path.exists() else []
+    existing.extend(results)
+    json_path.write_text(json.dumps(existing, indent=2))
 
 
 def discover_test_files(test_data_dir: Path, model_name: str, specifier: str):

@@ -1,6 +1,0 @@
-timestamp,model,source,target,file,runtime,passed,violations,logical,llm
-2026-04-07 12:00:13,openrouter/qwen/qwen-2.5-72b-instruct,codemeta,cff,codemetar.json,35.18,False,Missing field 'authors[0].family-names' ||| Missing field 'authors[0].given-names',Boettiger ||| Carl,(missing) ||| (missing)
-2026-04-07 12:01:16,openrouter/qwen/qwen-2.5-72b-instruct,codemeta,cff,context.json,19.24,True,,,
-2026-04-07 12:03:21,openrouter/qwen/qwen-2.5-72b-instruct,codemeta,datacite,chime.json,124.99,False,Missing field 'creators[0].nameIdentifiers' ||| Value at 'formats[0]' not found,"[{'nameIdentifier': 'https://orcid.org/0000-0001-9576-7914', 'nameIdentifierScheme': 'ORCID', 'schemeUri': 'https://orcid.org/'}] ||| 'Logo'",(missing) ||| ['application/netlogo']
-2026-04-07 12:47:06,openrouter/qwen/qwen-2.5-72b-instruct,codemeta,cff,codemetar.json,53.57,False,Missing field 'authors[0].family-names' ||| Missing field 'authors[0].given-names',Boettiger ||| Carl,(missing) ||| (missing)
-2026-04-07 12:50:21,openrouter/qwen/qwen-2.5-72b-instruct,codemeta,datacite,chime.json,123.67,False,Missing field 'creators[0].nameIdentifiers' ||| Value at 'formats[0]' not found,"[{'nameIdentifier': 'https://orcid.org/0000-0001-9576-7914', 'nameIdentifierScheme': 'ORCID', 'schemeUri': 'https://orcid.org/'}] ||| 'Logo'",(missing) ||| ['application/netlogo']

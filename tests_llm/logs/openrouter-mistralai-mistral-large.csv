@@ -1,6 +1,0 @@
-timestamp,model,source,target,file,runtime,passed,violations,logical,llm
-2026-04-07 11:58:02,openrouter/mistralai/mistral-large,codemeta,cff,creator.json,21.9,True,,,
-2026-04-07 11:58:27,openrouter/mistralai/mistral-large,codemeta,cff,context.json,24.66,True,,,
-2026-04-07 11:59:38,openrouter/mistralai/mistral-large,codemeta,datacite,chime.json,70.83,False,Missing field 'creators[0].nameIdentifiers[0].schemeUri' ||| Value at 'formats[0]' not found,https://orcid.org/ ||| 'Logo',(missing) ||| ['application/x-netlogo']
-2026-04-07 12:38:49,openrouter/mistralai/mistral-large,codemeta,cff,codemetar.json,32.2,False,Missing field 'authors[0].email' ||| Missing field 'authors[0].family-names' ||| Missing field 'authors[0].given-names',cboettig@gmail.com ||| Boettiger ||| Carl,(missing) ||| (missing) ||| (missing)
-2026-04-07 12:40:32,openrouter/mistralai/mistral-large,codemeta,datacite,chime.json,62.37,False,Missing field 'creators[0].nameIdentifiers[0].schemeUri' ||| Value at 'formats[0]' not found,https://orcid.org/ ||| 'Logo',(missing) ||| ['application/x-netlogo']

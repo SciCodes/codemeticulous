@@ -31,9 +31,12 @@ def extract_json(llm_output: str) -> dict:
         return ast.literal_eval(json_str)
 
 
-def structured_completion(llm_model: str, messages: list, target_model: BaseModel) -> BaseModel | None:
+def structured_completion(llm_model: str, messages: list, target_model: BaseModel) -> tuple[BaseModel | None, dict]:
     max_retries = 3 # sets limit on retries if llm's output has validation errors
+    prompt_tokens = 0
+    completion_tokens = 0
 
+    # TODO: some providers dont support some litellm params to get confidence score and cost (e.g. anthropic)
     for attempt in range(max_retries):
         try:
             response = litellm.completion(
@@ -41,9 +44,21 @@ def structured_completion(llm_model: str, messages: list, target_model: BaseMode
                 messages=messages,
                 temperature=0.3
             )
+            # try: 
+            #     total_cost += litellm.completion_cost(completion_response=response)
+            # except Exception:
+            #     pass
+            prompt_tokens += getattr(response.usage, "prompt_tokens", 0) or 0
+            completion_tokens += getattr(response.usage, "completion_tokens", 0) or 0
+
             output = extract_json(response.choices[0].message.content)
             validated_model = target_model(**output)
-            return validated_model
+            usage = {
+                # "cost": round(total_cost, 6),
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+            }
+            return validated_model, usage
         except ValidationError as e:
             logging.warning(f"Pydantic validation error on attempt {attempt + 1}: {e}")
 
@@ -100,6 +115,6 @@ def convert_ai(llm_model: str, source_format: str, target_format: str, source_da
 
     strategy = DefaultPrompt()
     messages = strategy.generate_system_prompt(source_instance, source_schema, target_schema)
-    target_data = structured_completion(llm_model, messages, target_model)
+    target_data, usage = structured_completion(llm_model, messages, target_model)
 
-    return target_data
+    return target_data, usage

@@ -1,0 +1,116 @@
+[
+  {
+    "timestamp": "2026-04-14 12:56:56",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 21.59,
+    "prompt_tokens": 17681,
+    "completion_tokens": 1293,
+    "passed": false,
+    "codemeta:authors": {
+      "target": "cff:authors",
+      "violations": [
+        {
+          "title": "Missing field 'authors[0].email'",
+          "expected": "cboettig@gmail.com",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'authors[0].family-names'",
+          "expected": "Boettiger",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'authors[0].given-names'",
+          "expected": "Carl",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 12:57:07",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 11.44,
+    "prompt_tokens": 13345,
+    "completion_tokens": 768,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:08:57",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 18.64,
+    "prompt_tokens": 17696,
+    "completion_tokens": 1302,
+    "passed": false,
+    "codemeta:authors": {
+      "target": "cff:authors",
+      "violations": [
+        {
+          "title": "Missing field 'authors[0].email'",
+          "expected": "cboettig@gmail.com",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'authors[0].family-names'",
+          "expected": "Boettiger",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'authors[0].given-names'",
+          "expected": "Carl",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 13:09:08",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 11.62,
+    "prompt_tokens": 13001,
+    "completion_tokens": 748,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:09:20",
+    "file": "context.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 11.15,
+    "prompt_tokens": 13379,
+    "completion_tokens": 761,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:09:51",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 31.72,
+    "prompt_tokens": 12062,
+    "completion_tokens": 2485,
+    "passed": false,
+    "codemeta:creators": {
+      "target": "datacite:creators",
+      "violations": [
+        {
+          "title": "Missing field 'creators[0].nameIdentifiers[0].schemeUri'",
+          "expected": "https://orcid.org/",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:formats": {
+      "target": "datacite:formats",
+      "violations": [
+        {
+          "title": "Value at 'formats[0]' doesn't match",
+          "expected": "'Logo'",
+          "llm_output": "['application/x-netlogo']"
+        }
+      ]
+    }
+  }
+]

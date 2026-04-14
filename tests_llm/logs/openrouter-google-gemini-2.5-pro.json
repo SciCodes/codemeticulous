@@ -1,0 +1,144 @@
+[
+  {
+    "timestamp": "2026-04-14 12:53:11",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 38.52,
+    "prompt_tokens": 5088,
+    "completion_tokens": 4307,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 12:53:28",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 17.35,
+    "prompt_tokens": 3850,
+    "completion_tokens": 1849,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 12:53:42",
+    "file": "context.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 13.75,
+    "prompt_tokens": 3850,
+    "completion_tokens": 1401,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 12:55:13",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 90.43,
+    "prompt_tokens": 12922,
+    "completion_tokens": 11197,
+    "passed": false,
+    "codemeta:creators": {
+      "target": "datacite:creators",
+      "violations": [
+        {
+          "title": "Missing field 'creators[0].nameType'",
+          "expected": "Personal",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'creators[0].nameIdentifiers[0].schemeUri'",
+          "expected": "https://orcid.org/",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'creators[1].nameType'",
+          "expected": "Personal",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'creators[2].nameType'",
+          "expected": "Personal",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:formats": {
+      "target": "datacite:formats",
+      "violations": [
+        {
+          "title": "Missing field 'formats'",
+          "expected": "['Logo']",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-04-14 13:04:47",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 38.62,
+    "prompt_tokens": 5088,
+    "completion_tokens": 4744,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:05:17",
+    "file": "creator.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 29.92,
+    "prompt_tokens": 8102,
+    "completion_tokens": 2967,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:06:10",
+    "file": "context.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 53.33,
+    "prompt_tokens": 8104,
+    "completion_tokens": 4267,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-04-14 13:07:23",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 72.22,
+    "prompt_tokens": 12774,
+    "completion_tokens": 8866,
+    "passed": false,
+    "codemeta:creators": {
+      "target": "datacite:creators",
+      "violations": [
+        {
+          "title": "Missing field 'creators[0].nameType'",
+          "expected": "Personal",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'creators[0].nameIdentifiers[0].schemeUri'",
+          "expected": "https://orcid.org/",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'creators[1].nameType'",
+          "expected": "Personal",
+          "llm_output": "(missing)"
+        },
+        {
+          "title": "Missing field 'creators[2].nameType'",
+          "expected": "Personal",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:formats": {
+      "target": "datacite:formats",
+      "violations": [
+        {
+          "title": "Missing field 'formats'",
+          "expected": "['Logo']",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  }
+]
