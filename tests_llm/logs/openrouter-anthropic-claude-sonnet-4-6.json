@@ -130,5 +130,79 @@
         }
       ]
     }
+  },
+  {
+    "timestamp": "2026-05-12 12:54:38",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 6.57,
+    "prompt_tokens": 7937,
+    "completion_tokens": 322,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:54:48",
+    "file": "artificial-anasazi.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 9.52,
+    "prompt_tokens": 10787,
+    "completion_tokens": 872,
+    "passed": false,
+    "codemeta:prefix": {
+      "target": "datacite:prefix",
+      "violations": [
+        {
+          "desc": "Missing field 'prefix'",
+          "expected": "10.25937",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:suffix": {
+      "target": "datacite:suffix",
+      "violations": [
+        {
+          "desc": "Missing field 'suffix'",
+          "expected": "krp4-g724",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-05-12 12:55:01",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 12.81,
+    "prompt_tokens": 11538,
+    "completion_tokens": 1132,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:57:42",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 4.86,
+    "prompt_tokens": 7937,
+    "completion_tokens": 322,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:57:53",
+    "file": "artificial-anasazi.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 10.63,
+    "prompt_tokens": 10789,
+    "completion_tokens": 945,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:58:05",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 12.22,
+    "prompt_tokens": 11540,
+    "completion_tokens": 1132,
+    "passed": true
   }
 ]

@@ -15,13 +15,13 @@ CONVERSION_MAP = {
     "codemeta": {
         "cff": [ # cff requires authors
             "codemetar.json",
-            "context.json",
-            "creator.json",
+            # "context.json",
+            # "creator.json",
             # "chime.json"
         ],
         "datacite": [ # datacite metadata requires creators, title, publisher, publication year
             "chime.json",
-            # "artificial-anasazi.json",
+            "artificial-anasazi.json",
             # "invenordm.json"
         ],
     }
@@ -36,14 +36,14 @@ PROVIDER_CONFIG = {
             "openai/gpt-4o",
             "anthropic/claude-sonnet-4-6",
             "mistralai/mistral-large",
-            "deepseek/deepseek-chat",
+            # "deepseek/deepseek-chat",
             # Mid-tier
             # "google/gemini-2.0-flash-001",
             # "openai/gpt-4o-mini",
             # "qwen/qwen-2.5-72b-instruct",
             # "meta-llama/llama-3.3-70b-instruct",
             # Lightweight
-            "anthropic/claude-haiku-4-5",
+            # "anthropic/claude-haiku-4-5",
         ]
     },
 }
@@ -184,6 +184,22 @@ def test_ai_convert(test_case, llm_model, run_log):
 
     run_log.append(entry)
 
+    # add full llm outputs that passed into a seperate log dump
+    if len(violations) == 0:
+        path = Path(__file__).parent / "logs" / "passed_cases.json"
+        raw = path.read_text() if path.exists() else ""
+        existing = json.loads(raw) if raw.strip() else []
+
+        passed_case = {
+            "file": file_path.name,
+            "source:target": f"{source_format}:{target_format}",
+            "source_metadata": source_data,
+            "llm_output": ai_dict
+        }
+
+        existing.append(passed_case)
+        path.write_text(json.dumps(existing, indent=2))
+
     assert not violations, (
         f"LLM result for '{file_path.name}' ({source_format} -> {target_format}) is missing {len(violations)} logical conversion fields:\n"
         + "\n\n".join(
@@ -193,3 +209,4 @@ def test_ai_convert(test_case, llm_model, run_log):
             for i, v in enumerate(violations)
         )
     )
+

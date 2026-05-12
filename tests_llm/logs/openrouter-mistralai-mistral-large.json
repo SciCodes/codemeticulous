@@ -112,5 +112,196 @@
         }
       ]
     }
+  },
+  {
+    "timestamp": "2026-05-12 12:49:12",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 1.27,
+    "prompt_tokens": 7042,
+    "completion_tokens": 311,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:49:13",
+    "file": "artificial-anasazi.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 1.36,
+    "prompt_tokens": 9817,
+    "completion_tokens": 1024,
+    "passed": false,
+    "codemeta:doi": {
+      "target": "datacite:doi",
+      "violations": [
+        {
+          "desc": "Missing field 'doi'",
+          "expected": "10.25937/krp4-g724",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:prefix": {
+      "target": "datacite:prefix",
+      "violations": [
+        {
+          "desc": "Missing field 'prefix'",
+          "expected": "10.25937",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:suffix": {
+      "target": "datacite:suffix",
+      "violations": [
+        {
+          "desc": "Missing field 'suffix'",
+          "expected": "krp4-g724",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:creators": {
+      "target": "datacite:creators",
+      "violations": [
+        {
+          "desc": "Missing field 'creators[0].affiliation[0].affiliationIdentifier'",
+          "expected": "https://schoolofsustainability.asu.edu/",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:publisher": {
+      "target": "datacite:publisher",
+      "violations": [
+        {
+          "desc": "Missing field 'publisher.publisherIdentifier'",
+          "expected": "https://ror.org/015bsfc29",
+          "llm_output": "(missing)"
+        },
+        {
+          "desc": "Missing field 'publisher.publisherIdentifierScheme'",
+          "expected": "ROR",
+          "llm_output": "(missing)"
+        },
+        {
+          "desc": "Missing field 'publisher.schemeUri'",
+          "expected": "https://ror.org/",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:rightsList": {
+      "target": "datacite:rightsList",
+      "violations": [
+        {
+          "desc": "Missing field 'rightsList[0].rights'",
+          "expected": "GPL-2.0",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-05-12 12:49:15",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 1.23,
+    "prompt_tokens": 10550,
+    "completion_tokens": 1024,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:55:07",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 5.58,
+    "prompt_tokens": 7042,
+    "completion_tokens": 390,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:55:22",
+    "file": "artificial-anasazi.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 14.98,
+    "prompt_tokens": 9817,
+    "completion_tokens": 1021,
+    "passed": false,
+    "codemeta:prefix": {
+      "target": "datacite:prefix",
+      "violations": [
+        {
+          "desc": "Missing field 'prefix'",
+          "expected": "10.25937",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:suffix": {
+      "target": "datacite:suffix",
+      "violations": [
+        {
+          "desc": "Missing field 'suffix'",
+          "expected": "krp4-g724",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-05-12 12:55:37",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 15.76,
+    "prompt_tokens": 10550,
+    "completion_tokens": 1068,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:58:11",
+    "file": "codemetar.json",
+    "source:target": "codemeta:cff",
+    "runtime_sec": 5.74,
+    "prompt_tokens": 7042,
+    "completion_tokens": 356,
+    "passed": true
+  },
+  {
+    "timestamp": "2026-05-12 12:58:45",
+    "file": "artificial-anasazi.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 33.57,
+    "prompt_tokens": 20906,
+    "completion_tokens": 2326,
+    "passed": false,
+    "codemeta:prefix": {
+      "target": "datacite:prefix",
+      "violations": [
+        {
+          "desc": "Missing field 'prefix'",
+          "expected": "10.25937",
+          "llm_output": "(missing)"
+        }
+      ]
+    },
+    "codemeta:suffix": {
+      "target": "datacite:suffix",
+      "violations": [
+        {
+          "desc": "Missing field 'suffix'",
+          "expected": "krp4-g724",
+          "llm_output": "(missing)"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-05-12 12:58:59",
+    "file": "chime.json",
+    "source:target": "codemeta:datacite",
+    "runtime_sec": 13.99,
+    "prompt_tokens": 10552,
+    "completion_tokens": 1031,
+    "passed": true
   }
 ]

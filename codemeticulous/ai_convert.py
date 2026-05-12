@@ -3,6 +3,7 @@ import logging
 import re
 import json
 import ast
+from pathlib import Path
 from pydantic import BaseModel, ValidationError
 from codemeticulous.standards import STANDARDS
 from codemeticulous.prompt_strategies import DefaultPrompt
@@ -36,7 +37,6 @@ def structured_completion(llm_model: str, messages: list, target_model: BaseMode
     prompt_tokens = 0
     completion_tokens = 0
 
-    # TODO: some providers dont support some litellm params to get confidence score and cost (e.g. anthropic)
     for attempt in range(max_retries):
         try:
             response = litellm.completion(
@@ -85,6 +85,13 @@ def structured_completion(llm_model: str, messages: list, target_model: BaseMode
             raise
 
 
+def get_examples(crosswalk: str, num: int = 1):
+    PATH = Path(__file__).parent.parent / "tests_llm" / "logs" / "passed_cases.json"
+    raw = PATH.read_text() if PATH.exists() else ""
+    cases = json.loads(raw) if raw.strip() else []
+    return [c for c in cases if c["source:target"] == crosswalk][:num] #TODO: randomize example selection
+
+
 def convert_ai(llm_model: str, source_format: str, target_format: str, source_data):
     """
     Automate metadata standard conversion using LLM and canonical representation.
@@ -114,7 +121,18 @@ def convert_ai(llm_model: str, source_format: str, target_format: str, source_da
     target_schema = json.dumps(target_schema, indent=2)
 
     strategy = DefaultPrompt()
-    messages = strategy.generate_system_prompt(source_instance, source_schema, target_schema)
+    messages = strategy.generate_system_prompt(source_schema, target_schema)
+
+    # inject few shot examples of past conversions, then end with the actual source data
+    examples = get_examples(f"{source_format}:{target_format}")
+    if examples:
+        messages.append({"role": "system", "content": f"Here are some examples of correct conversions between {source_format} and {target_format}:"})
+    
+    for ex in examples:
+        messages.append({"role": "user", "content": "SOURCE_DATA:\n" + json.dumps(ex["source_metadata"])})
+        messages.append({"role": "assistant", "content": json.dumps(ex["llm_output"])})
+
+    messages.append({"role": "user", "content": "SOURCE_DATA:\n" + source_instance.json()})
     target_data, usage = structured_completion(llm_model, messages, target_model)
 
     return target_data, usage

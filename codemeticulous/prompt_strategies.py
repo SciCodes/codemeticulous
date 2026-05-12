@@ -29,11 +29,10 @@ class DefaultPrompt(PromptStrategy):
     The final output must be an instance of the target model schema that can be successfully validated by Pydantic.
     """
 
-    def generate_system_prompt(self, source_instance, source_schema, target_schema) -> list:
+    def generate_system_prompt(self, source_schema, target_schema) -> list:
 
         return [
             {"role": "system", "content": self.PROMPT},
-            {"role": "user", "content": "SOURCE_DATA:\n" + source_instance.json()},
             {"role": "user", "content": "SOURCE SCHEMA\n" + source_schema},
             {"role": "user", "content": "TARGET_MODEL:\n" + target_schema}
         ]

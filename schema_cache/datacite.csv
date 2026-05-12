@@ -1,27 +1,39 @@
-Field,Type,Description
-doi,DOI String,The Digital Object Identifier (DOI) for the resource. It is a persistent identifier used to uniquely identify objects.
-prefix,Text,"The prefix part of the DOI, assigned by a registration agency. This field is used when minting a new DOI."
-suffix,Text,"The suffix part of the DOI, chosen by the client to uniquely identify the resource. This field is used when minting a new DOI."
-event,Event,"The event state of the DOI, such as 'draft', 'registered', or 'findable'. It determines the DOI's publication status."
-url,URL,The URL of the landing page for the resource that the DOI resolves to. This is a mandatory field for making a DOI findable.
-types,Resource Type,"Information about the type of the resource. It includes a general type from a controlled list (e.g., Software, Dataset) and an optional free-text description."
-creators,List of Creators,"The main researchers or authors involved in producing the resource, in priority order. Each creator can be a person or an organization."
-titles,List of Titles,The names or titles by which the resource is known. At least one main title is required.
-publisher,Publisher,"The name of the entity that holds, archives, publishes, or otherwise distributes the resource. This is typically an organization."
-publicationYear,Year,The year when the resource was or will be made publicly available. This must be a four-digit year.
-subjects,List of Subjects,"Subjects, keywords, classification codes, or key phrases describing the resource. This helps with discoverability."
-contributors,List of Contributors,"Institutions or persons responsible for collecting, managing, or otherwise contributing to the resource. Each contributor has a specific role."
-dates,List of Dates,"Different dates relevant to the resource, such as creation, publication, or update dates. Each date entry must have a type indicating its meaning."
-language,Language,"The primary language of the resource, specified using an IETF BCP 47 language tag."
-alternateIdentifiers,List of Alternate Identifiers,"Any other identifiers for the resource, such as a local identifier or a URL to a code repository."
-relatedIdentifiers,List of Related Identifiers,"Identifiers of related resources, along with the nature of the relationship (e.g., 'IsPartOf', 'HasVersion', 'Cites')."
-relatedItems,List of Related Items,Information about related resources that are not identified by a formal persistent identifier. This can include descriptive text about the related item.
-sizes,List of Text,"Unstructured size information about the resource, such as '15 MiB' or '100 pages'."
-formats,List of Text,"Technical format of the resource, preferably using IANA media types like 'application/json' or 'text/csv'."
-version,Version String,The version number of the resource. It is recommended to use semantic versioning where appropriate.
-rightsList,List of Rights Information,"Information about rights held in and over the resource, such as a license. It is recommended to use an SPDX license identifier and URI."
-descriptions,List of Descriptions,"Different descriptions for the resource, such as an abstract or table of contents. Each description must have a type indicating its nature."
-geoLocations,List of Geographic Locations,"Spatial regions or named places where the data was collected or is about. Can be a point, a bounding box, or a polygon."
-fundingReferences,List of Funding References,"Information about financial support (funding) for the resource. This includes the funder name, award information, and funder identifier."
-schemaVersion,Schema URL,"The URI of the DataCite metadata schema used. For this model, the value is fixed to the DataCite Kernel v4 schema URL."
-container,Container,"Information about the larger resource that contains this resource, such as a journal or a book series. This property helps create parent-child relationships."
+Field,Obligation,Type,Sub-properties,Description,Examples
+doi,Recommended,Text,N/A,"A Digital Object Identifier (DOI) is a character string used to uniquely identify a resource. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.",10.82433/b09z-4k37
+prefix,Recommended,Text,N/A,"The prefix part of the DOI, assigned by a registration agency.",10.82433 of DOI 10.82433/b09z-4k37
+suffix,Recommended,Text,N/A,"The suffix part of the DOI, chosen by the client to uniquely identify the resource.",b09z-4k37 of DOI 10.82433/b09z-4k37
+event,Optional,Enum,N/A,"The event state of the DOI,it determines the DOI's publication status.","'hide', 'registered', or 'publish'."
+url,Optional,URL,N/A,The URL of the landing page for the resource that the DOI resolves to. This is a mandatory field for making a DOI findable.,https://example.com/
+types,Mandatory,Resource Type,"resourceType,resourceTypeGeneral",Information about the type of the resource. Usually a recommended free-text description paired with a general resource type from a controlled list.,"'resourceType': 'Census Data', 'resourceTypeGeneral': 'Dataset'"
+creators,Mandatory,List of Persons,"nameType,givenName,familyName,nameIdentifier,affiliation","The main researchers or authors involved in producing the resource, in priority order.",
+nameType,Recommended,Enum,N/A,Type of nasme of the creator.,'Organizational' or 'Personal'.
+givenName,Recommended,Text,N/A,The personal or first name of the creator.,
+familyName,Recommended,Text,N/A,The surname or last name of the creator.,
+nameIdentifier,Recommended,List of Name Identifiers,"nameIdentifierScheme,schemeURI","Uniquely identifies an individual or legal entity, according to various schemes.","For an author with an @id sub-property: 'nameIdentifier': 'https://orcid.org/0000-0001-5727-2427', 'nameIdentifierScheme': 'ORCID', 'schemeURI': 'https://orcid.org/'"
+affiliation,Recommended,List of Affiliations,"affiliationIdentifier,affiliationIdentifierScheme,schemeURI","The organizational or institutional affiliation of the creator. In the case of an organizational creator, it will often be the name of the institution to which that organization belongs to.","'affiliationIdentifier': 'https://ror.org/04wxnsj81', 'affiliationIdentifierScheme': 'ROR', 'schemeURI': 'https://ror.org'"
+titles,Mandatory,List of Titles,"titleType,lang",The names or titles by which the resource is known. At least one main title is required.,"'lang': 'eng', 'title': 'Example', 'titleType': 'Subtitle'"
+titleType,Optional,Enum,N/A,Type of title other than the main one.,"'AlternativeTitle','Subtitle','TranslatedTitle', or 'Other'."
+publisher,Mandatory,Publisher,"publisherIdentifier,publisherIdentifierScheme,schemeUri,lang","The name of the entity that holds, archives, publishes, or otherwise distributes the resource.","'name': 'GFZ German Research Centre for Geosciences','publisherIdentifier': 'https://ror.org/04z8jg394','publisherIdentifierScheme': 'ROR','schemeUri': 'https://ror.org/','lang': 'en'"
+publicationYear,Mandatory,Year,N/A,The year when the resource was or will be made publicly available. This must be a four-digit year.,
+subjects,Optional,List of Subjects,"subjectScheme,schemeUri,valueUri,classificationCode,lang","Subjects, keywords, classification codes, or key phrases describing the resource.",
+subjectScheme,Optional,Text,N/A,The name of the subject scheme or classification code or authority if one is used.,ANZSRC Fields of Research
+schemeUri,Optional,URI,N/A,The URI of the subject identifier scheme.,https://id.loc.gov/authorities/subjects.html
+valueUri,Optional,URI,N/A,The URI of the subject term.,https://id.loc.gov/authorities/subjects/sh85118622.html
+classificationCode,Optional,Text,N/A,Used for the subject term in the subject scheme.,310607 of subject term “Nanobiotechnology” in the ANZSRC Fields of Research.
+contributors,Optional,List of Persons,contributorType,"Institutions or Persons responsible for collecting, managing, or otherwise contributing to the resource. Each contributor has the same sub-properties as a creator, but additionally has a contributor type.",
+dates,Recommended,List of Dates,"dateType,dateInformation","Different dates relevant to the resource, such as creation, publication, or update dates. Each date entry must have a type indicating its meaning.","'date': '2020-01-01','dateType': 'Other','dateInformation': 'Conceptualized'"
+dateType,Mandatory,Enum,N/A,The type of date.,
+language,Optional,Language,N/A,"The primary language of the resource, specified using an IETF BCP 47 language tag.",
+alternateIdentifiers,Optional,List of Alternate Identifiers,alternateIdentifierType,"Any other identifiers for the resource, such as a local identifier or a URL to a code repository.","'alternateIdentifierType': 'Local accession number','alternateIdentifier': 'E-GEOD-3481'"
+relatedIdentifiers,Recommended,List of Related Identifiers,"relatedIdentifierType,relationType","Identifiers of related resources, along with the nature of the relationship (e.g., 'IsPartOf', 'HasVersion', 'Cites').",
+relationType,Mandatory,Enum,N/A,Description of the relationship of the resource being registered (A) and the related resource (B).,
+relatedItems,Optional,List of Related Items,"relatedItemType,titles,relationType",Information about related resources that are not identified by a formal persistent identifier. This can include descriptive text about the related item.,
+sizes,Optional,List of Text,N/A,Unstructured size information about the resource.,"'15 pages','1 MB'"
+formats,Recommended,List of Text,N/A,"Technical format of the resource, preferably using IANA media types.","'application/json', 'text/csv'"
+version,Recommended,Version String,N/A,The version number of the resource. It is recommended to use semantic versioning where appropriate.,'version': '2.1'
+rightsList,Optional,List of Rights Information,"rightsUri,rightsIdentifier,rightsIdentifierScheme,schemeUri,lang","Information about rights held in and over the resource, such as a license. It is recommended to use an SPDX license identifier and URI.","'rights': 'Creative Commons Attribution 4.0 International','rightsUri': 'https://creativecommons.org/licenses/by/4.0/','schemeUri': 'https://spdx.org/licenses/','rightsIdentifier': 'CC-BY-4.0','rightsIdentifierScheme': 'SPDX','lang': 'en'"
+descriptions,Recommended,List of Descriptions,"descriptionType,lang",All additional information that does not fit in any of the other categories. May be used for technical information or detailed information associated with a scientific instrument.,"'lang': 'en','description': 'Example abstract','descriptionType': 'Abstract'"
+geoLocations,Optional,List of Geographic Locations,"geoLocationPlace,geoLocationPoint,geoLocationBox,geoLocationPolygon","Spatial regions or named places where the data was collected or is about. Can be a point, a bounding box, or a polygon.",
+fundingReferences,Optional,List of Funding References,"funderIdentifier,funderIdentifierType,awardNumber,awardUri,awardTitle","Information about financial support (funding) for the resource. This includes the funder name, award information, and funder identifier.",
+schemaVersion,Optional,Schema URL,N/A,"The URI of the DataCite metadata schema version used. For this model, the value is fixed to the DataCite Kernel v4 schema URL.",
+container,Optional,Container,"identifier,identifierType,type,title,firstPage","Information about the larger resource that contains this resource, such as a journal or a book series. This property helps create parent-child relationships.",

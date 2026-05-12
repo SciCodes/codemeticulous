@@ -89,13 +89,12 @@ def check_schema(model: str, flag: bool = False):
 
         if file.exists():
             with open(file, 'r') as f:
-                reader = csv.reader(f)
-                next(reader)
-                field_descriptions = [row for row in reader]
-            
+                reader = csv.DictReader(f)
+                fields = [dict(row) for row in reader]
+
             return {
                 "model_name": model,
-                "fields": field_descriptions
+                "fields": fields
             }
             
         else: # if it doesn't exist, use LLM to generate a csv of schema information

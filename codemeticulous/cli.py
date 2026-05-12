@@ -113,7 +113,7 @@ def load_file_autodetect(file_path: str):
 def ai_convert(llm_model, source_format, target_format, input_file, output_file, verbose):
     try:
         input_data = load_file_autodetect(input_file)
-        converted_data = _convert_ai(llm_model, source_format, target_format, input_data)
+        converted_data, _ = _convert_ai(llm_model, source_format, target_format, input_data)
         output_data = dump_data(converted_data, target_format)
     except (OSError, ValueError, ValidationError) as exc:
         if verbose:
