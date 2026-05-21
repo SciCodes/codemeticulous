@@ -1,22 +1,40 @@
-Field,Type,Description
-abstract,Text,A short summary of the work. This helps users quickly understand the software's purpose.
-authors,List of Person or Organization,"The creators of the software. Each author can be an individual person or a group, such as a research institution or company."
-cff_version,Text,The version of the Citation File Format standard used in this file. It ensures the file is interpreted correctly by tools.
-commit,Text,The specific commit hash from the version control system for this version of the software. This provides a precise reference to the code.
-contact,List of Person or Organization,The individuals or groups to contact for support or inquiries about the software. This helps direct communication to the right people.
-date_released,Date,The date when this version of the software was made publicly available. This corresponds to the Schema.org 'datePublished' property.
-doi,DOI,The Digital Object Identifier (DOI) for the software version. A DOI provides a persistent and unique link to the work.
-identifiers,List of Identifiers,"A list of other unique identifiers for the software, such as a SWHID or an archive URL. This helps in uniquely identifying and locating the work."
-keywords,List of Text,A list of keywords or tags that describe the software. These help with discovery and categorization.
-license,License,"The license under which the software is provided, typically as a standard SPDX identifier. This informs users of the permissions and restrictions."
-license_url,URL,A URL pointing to the full text of the software's license. This provides users with the specific legal terms.
-message,Text,"A message to the human reader of the file to let them know what to do with the citation metadata. Example: ""If you use this software, please cite it using the metadata from this file."""
-preferred_citation,Citation,"A specific reference that the authors prefer to be cited, such as a paper describing the software. This guides users to the most appropriate citation."
-references,List of Citations,"A list of relevant publications or other works related to the software. These could be papers that use, describe, or are built upon by the software."
-repository,URL,"The URL of a public repository where a version of the software is archived, such as on Zenodo or Figshare. This points to a citable, preserved copy."
-repository_artifact,URL,"The URL of a specific build or package of the software, such as a JAR file, container image, or wheel. This points to a runnable or installable version."
-repository_code,URL,"The URL of the source code repository for the software. This is typically a link to a platform like GitHub, GitLab, or Bitbucket."
-title,Text,The official name of the software being cited. This serves as the primary human-readable identifier for the work.
-type,Text,"The type of the work being cited, which must be 'software'. This clarifies the nature of the cited entity."
-url,URL,The URL of the software's project website or landing page. This provides a general entry point for information about the software.
-version,Version,The version number of the software being cited. This should ideally follow a standard like Semantic Versioning.
+Field,Obligation,Type,Sub-properties,Description,Examples
+abstract,Recommended,Text,N/A,"A short summary of the work. This helps users quickly understand the software's purpose."
+authors,Mandatory,Array of definitions.person and/or definitions.entity objects.,N/A,"The creators of the software. Each author can be an individual person or a group, such as a research institution or company."
+cff_version,Mandatory,Text,N/A,"The Citation File Format schema version that the CITATION.cff file adheres to for providing the citation metadata."
+commit,Optional,Text,N/A,"The specific commit hash from the version control system for this version of the software. This provides a precise reference to the code.", "commit: 1ff847d81f29c45a3a1a5ce73d38e45c2f319bba"
+contact,Optional,Array of definitions.person and/or definitions.entity objects.,N/A,"The contact person, group, company, etc. for the software or dataset."
+date_released,Recommended,Date,N/A,"The date the software or data set has been released. Format is 4-digit year, 2-digit month, 2-digit day of month, separated by dashes."
+doi,Recommended,DOI,N/A,"The Digital Object Identifier (DOI) for the software version. The DOI of the software or dataset. This notation is most useful when there is just one DOI you want to include."
+identifiers,Recommended,List of Identifiers,N/A,"A list of other unique identifiers for the software, such as a SWHID or an archive URL. This helps in uniquely identifying and locating the work."
+keywords,Recommended,List of Text,N/A,"A list of keywords or tags that describe the software. These help with discovery and categorization."
+license,Recommended,License,N/A,"The SPDX license identifier(s) for the license(s) under which the work is made available. When there are multiple licenses, it is assumed their relationship is OR, not AND.","license: Apache-2.0"
+license_url,Optional,URL,N/A,"The URL of the license text under which the software or dataset is licensed (only for non-standard licenses not included in the SPDX License List).","license-url: "https://obscure-licenses.com?id=1234""
+message,Mandatory,Text,N/A,"A message to the human reader of the CITATION.cff file to let them know what to do with the citation metadata.","message: "If you use this software, please cite it using the metadata from this file.""
+preferred_citation,Optional,Citation,N/A,"A reference to another work that should be cited instead of the software or dataset itself. Note that the principles of software citation and data citation require that software should be cited on the same basis as any other research product such as a paper or a book. Adding a different preferred citation may result in a violation of the respective primary principle, "Importance", when others cite this work."
+references,Optional,List of Citations,N/A,"Reference(s) to other creative works. Similar to a list of references in a paper, references of the software or dataset may include other software (dependencies), or other research products that the software or dataset builds on, but not work describing the software or dataset."
+repository,Recommended,URL,N/A,"The URL of the software or dataset in a repository/archive (when the repository is neither a source code repository nor a build artifact repository).","repository: "https://ascl.net/2105.013""
+repository_artifact,Optional,URL,N/A,"The URL of a specific build or package of the software, such as a JAR file, container image, or wheel. This points to a runnable or installable version.","repository-artifact: "https://search.maven.org/artifact/org.corpus-tools/cff-maven-plugin/0.4.0/maven-plugin""
+repository_code,Optional,URL,N/A,"The URL of the source code repository for the software. This is typically a link to a platform like GitHub, GitLab, or Bitbucket.","repository-code: "https://github.com/citation-file-format/cff-converter-python""
+title,Mandatory,Text,N/A,"The official name of the software being cited. This serves as the primary human-readable identifier for the work."
+type,Recommended,Text,N/A,"The type of the work being cited, which must be 'software'. This clarifies the nature of the cited entity."
+url,Recommended,URL,N/A,"The URL of the software's project website or landing page. This provides a general entry point for information about the software.","url: "https://citation-file-format.github.io/""
+version,Optional,Version,N/A,"The version number of the software being cited. This should ideally follow a standard like Semantic Versioning."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

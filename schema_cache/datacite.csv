@@ -1,12 +1,12 @@
 Field,Obligation,Type,Sub-properties,Description,Examples
 doi,Recommended,Text,N/A,"A Digital Object Identifier (DOI) is a character string used to uniquely identify a resource. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.",10.82433/b09z-4k37
-prefix,Recommended,Text,N/A,"The prefix part of the DOI, assigned by a registration agency.",10.82433 of DOI 10.82433/b09z-4k37
-suffix,Recommended,Text,N/A,"The suffix part of the DOI, chosen by the client to uniquely identify the resource.",b09z-4k37 of DOI 10.82433/b09z-4k37
+prefix,Recommended,Text,N/A,"The prefix part of the DOI, assigned by a registration agency.","10.82433" of DOI 10.82433/b09z-4k37
+suffix,Recommended,Text,N/A,"The suffix part of the DOI, chosen by the client to uniquely identify the resource.","b09z-4k37" of DOI 10.82433/b09z-4k37
 event,Optional,Enum,N/A,"The event state of the DOI,it determines the DOI's publication status.","'hide', 'registered', or 'publish'."
 url,Optional,URL,N/A,The URL of the landing page for the resource that the DOI resolves to. This is a mandatory field for making a DOI findable.,https://example.com/
 types,Mandatory,Resource Type,"resourceType,resourceTypeGeneral",Information about the type of the resource. Usually a recommended free-text description paired with a general resource type from a controlled list.,"'resourceType': 'Census Data', 'resourceTypeGeneral': 'Dataset'"
 creators,Mandatory,List of Persons,"nameType,givenName,familyName,nameIdentifier,affiliation","The main researchers or authors involved in producing the resource, in priority order.",
-nameType,Recommended,Enum,N/A,Type of nasme of the creator.,'Organizational' or 'Personal'.
+nameType,Recommended,Enum,N/A,Type of name of the creator.,'Organizational' or 'Personal'.
 givenName,Recommended,Text,N/A,The personal or first name of the creator.,
 familyName,Recommended,Text,N/A,The surname or last name of the creator.,
 nameIdentifier,Recommended,List of Name Identifiers,"nameIdentifierScheme,schemeURI","Uniquely identifies an individual or legal entity, according to various schemes.","For an author with an @id sub-property: 'nameIdentifier': 'https://orcid.org/0000-0001-5727-2427', 'nameIdentifierScheme': 'ORCID', 'schemeURI': 'https://orcid.org/'"

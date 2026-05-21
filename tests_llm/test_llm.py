@@ -15,7 +15,7 @@ CONVERSION_MAP = {
     "codemeta": {
         "cff": [ # cff requires authors
             "codemetar.json",
-            # "context.json",
+            "context.json",
             # "creator.json",
             # "chime.json"
         ],
@@ -125,7 +125,7 @@ def fields_are_superset(baseline: dict, ai_result: dict, path: str = "") -> list
     return diffs
 
 
-def test_ai_convert(test_case, llm_model, run_log):
+def test_ai_convert(test_case, llm_model, run_log, tmp_path):
     source_format, target_format, file_path = test_case
 
     print(f"\n{llm_model} conversion from {source_format} to {target_format} with {file_path}")
@@ -184,21 +184,15 @@ def test_ai_convert(test_case, llm_model, run_log):
 
     run_log.append(entry)
 
-    # add full llm outputs that passed into a seperate log dump
+    # write full llm output for passed cases to tmp_path (isolated per test run, not tracked in git)
     if len(violations) == 0:
-        path = Path(__file__).parent / "logs" / "passed_cases.json"
-        raw = path.read_text() if path.exists() else ""
-        existing = json.loads(raw) if raw.strip() else []
-
         passed_case = {
             "file": file_path.name,
             "source:target": f"{source_format}:{target_format}",
             "source_metadata": source_data,
-            "llm_output": ai_dict
+            "llm_output": ai_dict,
         }
-
-        existing.append(passed_case)
-        path.write_text(json.dumps(existing, indent=2))
+        (tmp_path / "passed_case.json").write_text(json.dumps(passed_case, indent=2))
 
     assert not violations, (
         f"LLM result for '{file_path.name}' ({source_format} -> {target_format}) is missing {len(violations)} logical conversion fields:\n"

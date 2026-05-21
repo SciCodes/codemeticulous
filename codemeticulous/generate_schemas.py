@@ -70,7 +70,7 @@ def generate_schemas(llm_model: str):
                 writer.writerow(["Field", "Type", "Description"])
                 writer.writerows(field_descriptions)
         except Exception as e:
-            logging.error(f"ERROR: failed to create list from llm response: ", e)  
+            logging.exception(f"ERROR: failed to create list from llm response: ", e)  
             raise             
 
 

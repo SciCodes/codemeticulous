@@ -14,3 +14,6 @@ wheels/
 *~
 .slim
 .env
+
+# LLM test logs (enable with LLM_LOGS=1)
+tests_llm/logs/

@@ -112,6 +112,11 @@ def convert_ai(llm_model: str, source_format: str, target_format: str, source_da
         source_instance = source_model(**source_data)
     elif isinstance(source_data, source_model):
         source_instance = source_data
+    else:
+        raise TypeError(
+             f"source_data must be a dict or an instance of {source_model.__name__}; "
+             f"got {type(source_data).__name__}"
+         )
 
     # Create summarized schema of source pydantic model according to data instance
     source_schema_dict = check_schema(source_format, source_instance)
