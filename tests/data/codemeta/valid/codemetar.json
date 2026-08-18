@@ -42,7 +42,7 @@
   },
   "softwareSuggestions": [
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "testthat",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -52,7 +52,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "jsonvalidate",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -62,7 +62,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "jsonld",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -72,7 +72,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "covr",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -82,7 +82,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "knitr",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -92,7 +92,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "rmarkdown",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -102,7 +102,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "httr",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -112,7 +112,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "magrittr",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -122,7 +122,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "readr",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -132,7 +132,7 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "xml2",
       "provider": {
         "@id": "https://cran.r-project.org",
@@ -144,7 +144,7 @@
   ],
   "softwareRequirements": [
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "jsonlite",
       "version": "1.3",
       "provider": {
@@ -155,19 +155,19 @@
       }
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "utils"
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "methods"
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "stats"
     },
     {
-      "@type": "SoftwareApplication",
+      "@type": "SoftwareSourceCode",
       "name": "R",
       "version": "3.0.0"
     }

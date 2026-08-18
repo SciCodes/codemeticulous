@@ -1,26 +1,13 @@
-# convert between codemeta and datacite metadata
-# see: https://github.com/codemeta/codemeta/blob/master/crosswalks/DataCite.csv
+from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 import re
-from typing import Optional
-from urllib.parse import urlparse
+from typing import Any
+from urllib.parse import urlsplit
 
-from pydantic2_schemaorg.CreativeWork import CreativeWork as SchemaOrgCreativeWork
+from pydantic import ValidationError
 
-from codemeticulous.models import CanonicalCodeMeta
-from codemeticulous.extract import ActorExtractor, extract_doi_from_identifier
-from codemeticulous.codemeta.models import (
-    CodeMeta,
-    Actor as CodeMetaActor,
-    ActorListOrSingle as CodeMetaActorListOrSingle,
-)
-from codemeticulous.utils import (
-    get_first_if_single_list,
-    ensure_list,
-    get_first_if_list,
-    is_url,
-)
+from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
 from codemeticulous.datacite.models import (
     AffiliationItem,
     Contributor,
@@ -28,379 +15,329 @@ from codemeticulous.datacite.models import (
     Creator,
     DataCite,
     DateModel,
+    DateType,
     Description,
+    DescriptionType,
     NameIdentifier,
-    Person,
     Publisher,
+    RelatedIdentifier,
+    RelatedIdentifierType,
+    RelationType,
     RightsListItem,
     Subject,
     Title,
     Types,
+    NameType,
+    ResourceTypeGeneral,
 )
+from codemeticulous.models import Agent, Contribution, Identifier, License, RelatedResource, SoftwareMetadata
 
-IDENTIFIER_SCHEMES = {
-    "orcid.org": "ORCID",
-    "ror.org": "ROR",
-    "isni.org": "ISNI",
-}
 
-CONTRIBUTOR_TYPE_MAP = {
-    ContributorType.ContactPerson: {
-        "contact",
-        "contact person",
-        "point of contact",
-        "main contact",
-        "primary contact",
-    },
-    ContributorType.DataCollector: {
-        "data collector",
-        "data collection",
-        "collector of data",
-        "field data collector",
-        "data gatherer",
-    },
-    ContributorType.DataCurator: {
-        "data curator",
-        "data curation",
-        "curator of data",
-        "data organizer",
-    },
-    ContributorType.DataManager: {
-        "data manager",
-        "data management",
-        "manager of data",
-        "data admin",
-    },
-    ContributorType.Distributor: {
-        "distributor",
-        "distribution",
-        "data distributor",
-        "content distributor",
-    },
-    ContributorType.Editor: {
-        "editor",
-        "editing",
-        "content editor",
-        "text editor",
-        "manuscript editor",
-    },
-    ContributorType.HostingInstitution: {
-        "hosting institution",
-        "host",
-        "institution host",
-        "hosting organization",
-    },
-    ContributorType.Producer: {
-        "producer",
-        "production",
-        "data producer",
-        "content producer",
-    },
-    ContributorType.ProjectLeader: {
-        "project leader",
-        "leader",
-        "project head",
-        "team leader",
-        "head of project",
-    },
-    ContributorType.ProjectManager: {
-        "project manager",
-        "manager",
-        "project administrator",
-        "project supervisor",
-    },
-    ContributorType.ProjectMember: {
-        "project member",
-        "member",
-        "team member",
-        "participant",
-    },
-    ContributorType.RegistrationAgency: {
-        "registration agency",
-        "registrar",
-        "agency registrar",
-        "registry agency",
-    },
-    ContributorType.RegistrationAuthority: {
-        "registration authority",
-        "authority",
-        "registry authority",
-        "regulatory authority",
-    },
-    ContributorType.RelatedPerson: {
-        "related person",
-        "person related",
-        "associated person",
-        "affiliate",
-    },
-    ContributorType.Researcher: {"researcher", "research", "investigator", "scientist"},
-    ContributorType.ResearchGroup: {
-        "research group",
-        "group",
-        "team",
-        "research team",
-        "research unit",
-    },
-    ContributorType.RightsHolder: {
-        "rights holder",
-        "copyright holder",
-        "intellectual property owner",
-        "rights owner",
-    },
-    ContributorType.Sponsor: {
-        "sponsor",
-        "funding sponsor",
-        "funder",
-        "financial backer",
-    },
-    ContributorType.Supervisor: {"supervisor", "advisor", "overseer", "mentor"},
-    ContributorType.Translator: {"translator", "translation"},
-    ContributorType.WorkPackageLeader: {
-        "work package leader",
-        "package leader",
-        "task leader",
-        "subproject leader",
-    },
+ROLE_TYPES = {
+    "contact": ContributorType.ContactPerson,
+    "contact person": ContributorType.ContactPerson,
+    "researcher": ContributorType.Researcher,
+    "scientist": ContributorType.Researcher,
+    "editor": ContributorType.Editor,
+    "data curator": ContributorType.DataCurator,
+    "data manager": ContributorType.DataManager,
+    "project manager": ContributorType.ProjectManager,
+    "project member": ContributorType.ProjectMember,
+    "sponsor": ContributorType.Sponsor,
+    "supervisor": ContributorType.Supervisor,
+    "translator": ContributorType.Translator,
 }
 
 
-# FIXME: this is horrible, break it up
-def codemeta_actors_to_datacite(
-    actors: CodeMetaActorListOrSingle,
-    datacite_actor_model: Creator | Contributor | Publisher,
-) -> Optional[list]:
-    actors = ensure_list(actors)
-    datacite_actors = []
-    for actor in [a for a in actors if a.type_ != "Role"]:
-        # after filtering out roles, we need to find the roles for this actor
-        roles = [r for r in actors if r.id_ == actor.id_ and r.type_ == "Role"]
-        extractor = ActorExtractor(actor, roles)
-        # pull out identifier url, scheme, and scheme uri
-        name_identifiers = []
-        if extractor.identifiers:
-            for identifier_url in extractor.identifiers:
-                url_parts = urlparse(identifier_url)
-                scheme = IDENTIFIER_SCHEMES.get(url_parts.netloc)
-                if scheme:
-                    name_identifiers.append(
-                        dict(
-                            nameIdentifier=identifier_url,
-                            nameIdentifierScheme=scheme,
-                            schemeUri=f"{url_parts.scheme}://{url_parts.netloc}",
-                        )
-                    )
-        # pull out affiliation name, url, scheme, and scheme uri
-        affiliations = []
-        if extractor.affiliations:
-            for affiliation_name, affiliation_url in extractor.affiliations:
-                affiliation = dict(name=affiliation_name)
-                if affiliation_url:
-                    url_parts = urlparse(affiliation_url)
-                    scheme = IDENTIFIER_SCHEMES.get(url_parts.netloc)
-                    affiliation["affiliationIdentifier"] = affiliation_url
-                    if scheme:
-                        affiliation["affiliationIdentifierScheme"] = scheme
-                        affiliation["schemeUri"] = (
-                            f"{url_parts.scheme}://{url_parts.netloc}"
-                        )
-                affiliations.append(affiliation)
-        # create the correct datacite actor
-        if datacite_actor_model == Creator:
-            datacite_actors.append(
-                Creator(
-                    name=extractor.name,
-                    nameType=(
-                        "Organizational" if extractor.is_organization else "Personal"
-                    ),
-                    givenName=extractor.given_names,
-                    familyName=extractor.family_names,
-                    nameIdentifiers=[NameIdentifier(**i) for i in name_identifiers]
-                    or None,
-                    affiliation=[AffiliationItem(**a) for a in affiliations] or None,
-                )
+def _issue(path: str, message: str) -> ConversionIssue:
+    return ConversionIssue(path=path, message=message)
+
+
+def _concrete_year(value: date | str | None) -> int | None:
+    if isinstance(value, datetime):
+        return value.year
+    if isinstance(value, date):
+        return value.year
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value).year
+        except ValueError:
+            return None
+    return None
+
+
+def _normalize_doi(value: str, path: str) -> str:
+    candidate = value.strip()
+    if candidate.lower().startswith("doi:"):
+        candidate = candidate[4:]
+    parsed = urlsplit(candidate)
+    if parsed.scheme in {"http", "https"}:
+        if parsed.netloc.lower() not in {"doi.org", "dx.doi.org"}:
+            raise ConversionError(f"Invalid DOI at {path}")
+        candidate = parsed.path.lstrip("/")
+    if re.fullmatch(r"10\.\d{4,9}/\S+", candidate) is None:
+        raise ConversionError(f"Invalid DOI at {path}")
+    return candidate
+
+
+def _date(value: date | str | None, date_type: DateType) -> DateModel | None:
+    if value is None:
+        return None
+    return DateModel(date=value, dateType=date_type)
+
+
+def _agent_name_parts(agent: Agent, path: str, issues: list[ConversionIssue]) -> dict[str, Any]:
+    kwargs: dict[str, Any] = {
+        "name": agent.name,
+        "givenName": agent.given_names[0] if agent.given_names else None,
+        "familyName": agent.family_names[0] if agent.family_names else None,
+    }
+    for field, values in (("given_names", agent.given_names), ("family_names", agent.family_names)):
+        for index in range(1, len(values)):
+            issues.append(_issue(f"{path}.{field}[{index}]", "additional name values are unsupported"))
+    if agent.kind == "person":
+        kwargs["nameType"] = NameType.Personal
+    elif agent.kind == "organization":
+        kwargs["nameType"] = NameType.Organizational
+    else:
+        issues.append(_issue(f"{path}.kind", "unknown agent kind has no DataCite name type"))
+    return kwargs
+
+
+def _name_identifiers(agent: Agent, path: str, issues: list[ConversionIssue]) -> list[NameIdentifier] | None:
+    result = []
+    for index, identifier in enumerate(agent.identifiers):
+        if not identifier.scheme:
+            issues.append(_issue(f"{path}.identifiers[{index}].scheme", "identifier scheme is required by DataCite"))
+            continue
+        result.append(
+            NameIdentifier(
+                nameIdentifier=identifier.value,
+                nameIdentifierScheme=identifier.scheme,
             )
-        elif datacite_actor_model == Contributor:
-            # match roles to contributor types
-            matched_roles = set()
-            for role in extractor.role_names:
-                normalized_role = (
-                    role.lower().replace(" ", "").replace("-", "").replace("_", "")
-                )
-                for (
-                    contributor_type,
-                    synonyms,
-                ) in CONTRIBUTOR_TYPE_MAP.items():
-                    if normalized_role in {
-                        s.lower().replace(" ", "").replace("-", "").replace("_", "")
-                        for s in synonyms
-                    }:
-                        matched_roles.add(contributor_type)
-            # if we have no matched roles, default to "Other"
-            if not matched_roles:
-                matched_roles.add(ContributorType.Other)
-
-            for role_type in matched_roles:
-                datacite_actors.append(
-                    Contributor(
-                        name=extractor.name,
-                        nameType=(
-                            "Organizational"
-                            if extractor.is_organization
-                            else "Personal"
-                        ),
-                        givenName=extractor.given_names,
-                        familyName=extractor.family_names,
-                        nameIdentifiers=[NameIdentifier(**i) for i in name_identifiers]
-                        or None,
-                        affiliation=[AffiliationItem(**a) for a in affiliations]
-                        or None,
-                        contributorType=role_type.value,
-                    )
-                )
-        elif datacite_actor_model == Publisher:
-            datacite_actors.append(
-                Publisher(
-                    name=extractor.name,
-                    publisherIdentifier=(
-                        name_identifiers[0].get("nameIdentifier")
-                        if name_identifiers
-                        else None
-                    ),
-                    publisherIdentifierScheme=(
-                        name_identifiers[0].get("nameIdentifierScheme")
-                        if name_identifiers
-                        else None
-                    ),
-                    schemeUri=(
-                        name_identifiers[0].get("schemeUri")
-                        if name_identifiers
-                        else None
-                    ),
-                )
-            )
-    return datacite_actors or None
+        )
+    return result or None
 
 
-def codemeta_license_to_datacite_rights(
-    codemeta_license: Optional[
-        list[SchemaOrgCreativeWork | str] | SchemaOrgCreativeWork | str
-    ],
-) -> Optional[list[RightsListItem]]:
-    licenses = ensure_list(codemeta_license)
-    rights_list = []
-    license_url = None
-    license_name = None
-    for l in licenses:
-        # plain string licenses should always be urls
-        if isinstance(l, str) and is_url(l):
-            license_url = l
-        else:
-            if hasattr(l, "url") and is_url(l.url):
-                license_url = l.url
-            if hasattr(l, "name"):
-                license_name = l.name
-        # FIXME: build a lookup table for spdx/osi licenses so we can figure out
-        # what license is being used and fill out all fields
-        if license_name or license_url:
-            rights_list.append(
-                RightsListItem(rights=license_name, rightsUri=license_url)
-            )
-    return rights_list or None
+def _affiliations(agent: Agent, path: str, issues: list[ConversionIssue]) -> list[AffiliationItem] | None:
+    result = []
+    for index, affiliation in enumerate(agent.affiliations):
+        kwargs: dict[str, Any] = {"name": affiliation.name}
+        if affiliation.identifier:
+            kwargs["affiliationIdentifier"] = affiliation.identifier.value
+            if affiliation.identifier.scheme:
+                kwargs["affiliationIdentifierScheme"] = affiliation.identifier.scheme
+            else:
+                issues.append(_issue(f"{path}.affiliations[{index}].identifier", "affiliation identifier scheme is required by DataCite"))
+                kwargs.pop("affiliationIdentifier")
+        result.append(AffiliationItem(**kwargs))
+    return result or None
 
 
-def codemeta_language_fileformat_to_datacite_format(
-    programming_language, file_format
-) -> list[str]:
-    possible_formats = ensure_list(programming_language) + ensure_list(file_format)
-    formats = []
-    for f in possible_formats:
-        if isinstance(f, str):
-            formats.append(f)
-        elif hasattr(f, "name") and isinstance(f.name, str):
-            formats.append(f.name)
-    return formats or None
+def _person_fields(agent: Agent, path: str, issues: list[ConversionIssue]) -> dict[str, Any]:
+    fields = _agent_name_parts(agent, path, issues)
+    if agent.email:
+        issues.append(_issue(f"{path}.email", "email is unsupported by DataCite"))
+    if agent.url:
+        issues.append(_issue(f"{path}.url", "agent URL is unsupported by DataCite"))
+    fields["nameIdentifiers"] = _name_identifiers(agent, path, issues)
+    fields["affiliation"] = _affiliations(agent, path, issues)
+    return fields
 
 
-def canonical_to_datacite(
-    data: CanonicalCodeMeta, ignore_existing_doi=False, **custom_fields
-) -> DataCite:
-    primary_doi = (
-        extract_doi_from_identifier(data.identifier)
-        if not ignore_existing_doi
-        else None
+def _creator(agent: Agent, path: str, issues: list[ConversionIssue]) -> Creator:
+    return Creator(**_person_fields(agent, path, issues))
+
+
+def _contributor_type(roles: list[str], path: str, issues: list[ConversionIssue]) -> ContributorType:
+    if not roles:
+        return ContributorType.Other
+    normalized = roles[0].strip().lower()
+    result = ROLE_TYPES.get(normalized)
+    if result is None:
+        issues.append(_issue(f"{path}.roles[0]", "role is not representable as a DataCite contributor type"))
+        result = ContributorType.Other
+    for index in range(1, len(roles)):
+        issues.append(_issue(f"{path}.roles[{index}]", "additional roles are unsupported"))
+    return result
+
+
+def _contributor(contribution: Contribution, path: str, issues: list[ConversionIssue]) -> Contributor:
+    fields = _person_fields(contribution.agent, f"{path}.agent", issues)
+    fields["contributorType"] = _contributor_type(contribution.roles, path, issues)
+    return Contributor(**fields)
+
+
+def _publisher(agent: Agent, path: str, issues: list[ConversionIssue]) -> Publisher:
+    fields: dict[str, Any] = {"name": agent.name}
+    for field in ("given_names", "family_names", "email", "url"):
+        if getattr(agent, field):
+            issues.append(_issue(f"{path}.{field}", "publisher field is unsupported by DataCite"))
+    if agent.identifiers:
+        first = agent.identifiers[0]
+        fields["publisherIdentifier"] = first.value
+        fields["publisherIdentifierScheme"] = first.scheme
+        for index in range(1, len(agent.identifiers)):
+            issues.append(_issue(f"{path}.identifiers[{index}]", "additional publisher identifiers are unsupported"))
+    for index in range(len(agent.affiliations)):
+        issues.append(_issue(f"{path}.affiliations[{index}]", "publisher affiliations are unsupported"))
+    return Publisher(**fields)
+
+
+def _identifier_type(identifier: Identifier, path: str, issues: list[ConversionIssue]) -> RelatedIdentifierType | None:
+    if not identifier.scheme:
+        issues.append(_issue(f"{path}.scheme", "related identifier scheme is required by DataCite"))
+        return None
+    normalized = identifier.scheme.lower()
+    for item in RelatedIdentifierType:
+        if item.value.lower() == normalized:
+            return item
+    issues.append(_issue(f"{path}.scheme", "related identifier scheme is unsupported by DataCite"))
+    return None
+
+
+def _related(resource: RelatedResource, index: int, issues: list[ConversionIssue]) -> RelatedIdentifier | None:
+    path = f"relations[{index}]"
+    identifier = resource.identifier
+    url_identifier = identifier is None and resource.url is not None
+    if identifier is None and resource.url is not None:
+        identifier = Identifier(value=resource.url, scheme="URL")
+    if not identifier:
+        issues.append(_issue(f"{path}.identifier", "related resource requires an identifier"))
+        return None
+    identifier_type = _identifier_type(identifier, f"{path}.identifier", issues)
+    if identifier_type is None:
+        return None
+    relation = {
+        "cites": RelationType.Cites,
+        "requires": RelationType.Requires,
+        "is_part_of": RelationType.IsPartOf,
+        "has_part": RelationType.HasPart,
+        "same_as": RelationType.IsIdenticalTo,
+    }.get(resource.relation)
+    if relation is None:
+        issues.append(_issue(path, "relation is unsupported by DataCite"))
+        return None
+    if resource.title:
+        issues.append(_issue(f"{path}.title", "related resource field is unsupported by DataCite"))
+    if resource.resource_type:
+        issues.append(_issue(f"{path}.resource_type", "related resource field is unsupported by DataCite"))
+    if resource.url and not url_identifier:
+        issues.append(_issue(f"{path}.url", "related resource field is unsupported by DataCite"))
+    for creator_index in range(len(resource.creators)):
+        issues.append(_issue(f"{path}.creators[{creator_index}]", "related resource creators are unsupported by DataCite"))
+    return RelatedIdentifier(
+        relatedIdentifier=identifier.value,
+        relatedIdentifierType=identifier_type,
+        relationType=relation,
     )
-    doi_prefix, doi_suffix = primary_doi.split("/") if primary_doi else (None, None)
-    # build descriptions
+
+
+def _software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[DataCite]:
+    issues: list[ConversionIssue] = []
+    if not value.creators:
+        raise ConversionError("DataCite requires at least one creator")
+    if value.publisher is None:
+        raise ConversionError("DataCite requires a publisher")
+    publication_year = value.publication_year
+    if publication_year is None:
+        publication_year = _concrete_year(value.date_released)
+    if publication_year is None:
+        raise ConversionError("DataCite requires a concrete publication year")
+
     descriptions = []
-    if data.description:
-        descriptions.append(
-            Description(description=data.description, descriptionType="Abstract")
-        )
-    if data.releaseNotes:
-        release_notes = ensure_list(data.releaseNotes)
-        descriptions.extend(
-            [
-                Description(description=note, descriptionType="TechnicalInfo")
-                for note in release_notes
-            ]
-        )
-    return DataCite(
-        **{
-            **dict(
-                doi=primary_doi,
-                prefix=doi_prefix,
-                suffix=doi_suffix,
-                url=get_first_if_list(data.url),
-                types=Types(
-                    resourceType=data.applicationCategory,
-                    resourceTypeGeneral="Software",
-                ),
-                creators=codemeta_actors_to_datacite(data.author, Creator),
-                titles=[Title(title=data.name)],
-                publisher=get_first_if_list(
-                    codemeta_actors_to_datacite(data.publisher, Publisher)
-                ),
-                publicationYear=(
-                    str(data.datePublished.year) if data.datePublished else None
-                ),
-                subjects=[
-                    Subject(subject=subject) for subject in ensure_list(data.keywords)
-                ]
-                or None,
-                contributors=codemeta_actors_to_datacite(data.contributor, Contributor),
-                dates=[
-                    DateModel(
-                        date=date.date() if isinstance(date, datetime) else date,
-                        dateType=date_type,
-                    )
-                    for date, date_type in [
-                        (data.dateCreated, "Created"),
-                        (data.dateModified, "Updated"),
-                    ]
-                    if date is not None
-                ],
-                # we have no way of knowing what the relationships are for relatedLinks since
-                # they are just urls
-                # TODO: though, it may be possible to use the following codemeta fields:
-                # hasPart, isPartOf, readme, sameAs, review, releaseNotes
-                # relatedIdentifiers=data.relatedLink,
-                sizes=[data.fileSize] if data.fileSize else None,
-                formats=codemeta_language_fileformat_to_datacite_format(
-                    data.programmingLanguage, data.fileFormat
-                ),
-                version=str(data.version) if data.version else None,
-                rightsList=codemeta_license_to_datacite_rights(data.license),
-                descriptions=descriptions,
-                # codemeta.funding is a plain string, can't really ensure that the string
-                # is the required name field
-                # fundingReferences=None,
-            ),
-            **custom_fields,
-        }
+    if value.description:
+        descriptions.append(Description(description=value.description, descriptionType=DescriptionType.Abstract))
+    descriptions.extend(
+        Description(description=note, descriptionType=DescriptionType.TechnicalInfo)
+        for note in value.release_notes
     )
+    rights = []
+    for index, item in enumerate(value.licenses):
+        if not item.identifier and not item.name and not item.url:
+            issues.append(_issue(f"licenses[{index}]", "empty license is not representable"))
+            continue
+        rights.append(RightsListItem(rights=item.name, rightsUri=item.url, rightsIdentifier=item.identifier))
+    identifiers = list(value.identifiers)
+    for index, identifier in enumerate(identifiers):
+        if (identifier.scheme or "").lower() == "doi":
+            identifiers[index] = Identifier(
+                value=_normalize_doi(identifier.value, f"identifiers[{index}]"),
+                scheme=identifier.scheme,
+            )
+    doi_index = next((index for index, item in enumerate(identifiers) if (item.scheme or "").lower() == "doi"), None)
+    doi = identifiers[doi_index].value if doi_index is not None else None
+    doi_prefix = doi.split("/", 1)[0] if doi and "/" in doi else None
+    doi_suffix = doi.split("/", 1)[1] if doi and "/" in doi else None
+    alternate_identifiers = []
+    for index, identifier in enumerate(identifiers):
+        if index == doi_index:
+            continue
+        if (identifier.scheme or "").lower() == "doi":
+            issues.append(_issue(f"identifiers[{index}]", "additional DOI demoted to an alternate identifier"))
+        alternate_identifiers.append(
+            {"alternateIdentifier": identifier.value, "alternateIdentifierType": identifier.scheme or "Other"}
+        )
+
+    dates = [
+        item
+        for item in (
+            _date(value.date_released, DateType.Available),
+            _date(value.date_created, DateType.Created),
+            _date(value.date_modified, DateType.Updated),
+        )
+        if item is not None
+    ]
+    if value.repository:
+        issues.append(_issue("repository", "repository is unsupported by DataCite"))
+    if value.repository_code:
+        issues.append(_issue("repository_code", "repository_code is unsupported by DataCite"))
+    if value.repository_artifact:
+        issues.append(_issue("repository_artifact", "repository_artifact is unsupported by DataCite"))
+    if value.download_url:
+        issues.append(_issue("download_url", "download URL is unsupported by DataCite"))
+
+    creators = [_creator(agent, f"creators[{index}]", issues) for index, agent in enumerate(value.creators)]
+    contributors = [_contributor(item, f"contributors[{index}]", issues) for index, item in enumerate(value.contributors)]
+    related = [item for index, resource in enumerate(value.relations) if (item := _related(resource, index, issues)) is not None]
+
+    payload: dict[str, Any] = {
+        "doi": doi,
+        "prefix": doi_prefix,
+        "suffix": doi_suffix,
+        "url": value.url,
+        "types": Types(resourceType=value.category, resourceTypeGeneral=ResourceTypeGeneral.Software),
+        "creators": creators,
+        "titles": [Title(title=value.title)],
+        "publisher": _publisher(value.publisher, "publisher", issues),
+        "publicationYear": str(publication_year),
+        "subjects": [Subject(subject=item) for item in value.keywords] or None,
+        "contributors": contributors or None,
+        "dates": dates or None,
+        "alternateIdentifiers": alternate_identifiers or None,
+        "relatedIdentifiers": related or None,
+        "sizes": value.sizes or None,
+        "formats": [*value.programming_languages, *value.formats] or None,
+        "version": value.version,
+        "rightsList": rights or None,
+        "descriptions": descriptions or None,
+    }
+    try:
+        result = DataCite.model_validate(payload)
+    except ValidationError as exc:
+        raise ConversionError(f"Unable to construct DataCite: {exc}") from exc
+    return ConversionResult(value=result, issues=tuple(issues))
 
 
-def datacite_to_canonical(data: DataCite) -> CanonicalCodeMeta:
-    raise NotImplementedError(
-        "DataCite metadata is not yet supported as an input format"
-    )
+def software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[DataCite]:
+    """Convert canonical software metadata to a validated DataCite record."""
+
+    try:
+        return _software_metadata_to_datacite(value)
+    except ConversionError:
+        raise
+    except ValidationError as exc:
+        raise ConversionError(f"Unable to construct DataCite: {exc}") from exc
+
+
+__all__ = ["software_metadata_to_datacite"]

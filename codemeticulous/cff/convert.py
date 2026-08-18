@@ -1,264 +1,256 @@
-# convert between codemeta and cff
-# see: https://github.com/codemeta/codemeta/blob/master/crosswalks/Citation%20File%20Format%201.2.0.csv
-# and: https://github.com/codemeta/codemeta/blob/master/crosswalks/Citation_File_Format_1.2.0.README.md
+"""Conversion from the neutral metadata model to Citation File Format."""
 
-from datetime import datetime
+from __future__ import annotations
+
+from datetime import date
 import re
-from typing import Optional
+from typing import Any
 
-from pydantic2_schemaorg.PostalAddress import PostalAddress as SchemaOrgPostalAddress
-from pydantic2_schemaorg.Person import Person as SchemaOrgPerson
-from pydantic2_schemaorg.Organization import Organization as SchemaOrgOrganization
+from pydantic import ValidationError
 
-from codemeticulous.models import CanonicalCodeMeta
-from codemeticulous.extract import ActorExtractor, extract_doi_from_identifier
-from codemeticulous.codemeta.models import (
-    CodeMeta,
-    Actor as CodeMetaActor,
-    ActorListOrSingle as CodeMetaActorListOrSingle,
-)
-from codemeticulous.utils import (
-    get_first_if_single_list,
-    ensure_list,
-    get_first_if_list,
-    is_url,
-)
+from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
+from codemeticulous.models import Agent, Identifier, License, RelatedResource, SoftwareMetadata
 from codemeticulous.cff.models import (
     CitationFileFormat,
-    Identifier1 as DoiIdentifier,
-    Identifier2 as UrlIdentifier,
-    Identifier3 as SwhIdentifier,
-    Identifier4 as OtherIdentifier,
-    Person,
     Entity,
+    Identifier1,
+    Identifier2,
+    Identifier3,
+    Identifier4,
     LicenseEnum,
+    Person,
     Reference,
 )
 
 
-def codemeta_actors_to_cff(actors: CodeMetaActorListOrSingle) -> list[Person | Entity]:
-    """convert a list of CodeMeta actors (Person, Organization, Role) to a list of
-    CFF Person or Entity objects
-    """
-    actors = ensure_list(actors)
-    cff_actors = []
-    # exclude role indicators from actors list (not used in CFF)
-    for actor in [a for a in actors if a.type_ != "Role"]:
-        extractor = ActorExtractor(actor)
-        if extractor.is_person:
-            cff_actors.append(
-                Person(
-                    address=extractor.address,
-                    affiliation=extractor.primary_affiliation_name,
-                    alias=extractor.alias,
-                    city=extractor.city,
-                    country=extractor.country,
-                    email=extractor.email,
-                    family_names=extractor.family_names,
-                    given_names=extractor.given_names,
-                    fax=extractor.fax,
-                    name_particle=extractor.name_particle,
-                    name_suffix=extractor.name_suffix,
-                    orcid=extractor.orcid,
-                    post_code=extractor.post_code,
-                    region=extractor.region,
-                    tel=extractor.tel,
-                    website=extractor.website,
-                )
-            )
-        elif extractor.is_organization:
-            cff_actors.append(
-                Entity(
-                    address=extractor.address,
-                    alias=extractor.alias,
-                    city=extractor.city,
-                    country=extractor.country,
-                    email=extractor.email,
-                    fax=extractor.fax,
-                    orcid=extractor.orcid,
-                    post_code=extractor.post_code,
-                    region=extractor.region,
-                    tel=extractor.tel,
-                    website=extractor.website,
-                )
-            )
-    return cff_actors
+_DOI = re.compile(r"^(?:https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}(?:\.\d+)?/[A-Za-z0-9:/_;\-.()\[\]\\]+)$")
+_SWH = re.compile(r"^swh:1:(?:snp|rel|rev|dir|cnt):[0-9a-fA-F]{40}$")
+_SPDX = {item.value for item in LicenseEnum}
+_REFERENCE_TYPES = {
+    "software": "software",
+    "software-code": "software-code",
+    "software_code": "software-code",
+    "article": "article",
+    "scholarlyarticle": "article",
+    "book": "book",
+    "blog": "blog",
+    "website": "website",
+}
 
 
-def codemeta_license_to_cff(codemeta_license) -> tuple[list[str], list[str]]:
-    """extracts any SPDX licenses from a CodeMeta license field
-    as well as any non-SPDX licenses if they are a url.
-
-    returns a tuple of lists containing SPDX IDs and URLs respectively"""
-    licenses = ensure_list(codemeta_license)
-    cff_licenses = []
-    cff_license_urls = []
-    spdx_url_pattern = re.compile(r"https://spdx\.org/licenses/([A-Za-z0-9\-_\.]+)")
-    spdx_ids = {l.value for l in LicenseEnum}
-    for l in licenses:
-        license_str = l if isinstance(l, str) else l.name
-        if isinstance(license_str, str):
-            match = spdx_url_pattern.match(license_str)
-            spdx_id = match.group(1) if match else license_str
-            if spdx_id in spdx_ids:
-                cff_licenses.append(spdx_id)
-            elif is_url(license_str):
-                cff_license_urls.append(license_str)
-    return cff_licenses, cff_license_urls
+def _issue(path: str, message: str) -> ConversionIssue:
+    return ConversionIssue(path=path, message=message)
 
 
-def extract_identifiers_from_codemeta(
-    data: CodeMeta, primary_doi=None
-) -> list[DoiIdentifier, UrlIdentifier, SwhIdentifier, OtherIdentifier]:
-    """extracts a list of cff identifiers (url, doi, swh, other) from a CodeMeta object"""
-    # flatten all possible identifier fields into a single list
-    possible_identifiers = []
-    for field in [data.identifier, data.isPartOf, data.hasPart, data.sameAs, data.url]:
-        if field is not None:
-            if isinstance(field, list):
-                possible_identifiers.extend(field)
-            else:
-                possible_identifiers.append(field)
-    # pull out urls from non-string fields
-    possible_identifier_strs = []
-    for possible_identifier in possible_identifiers:
-        if isinstance(possible_identifier, str):
-            possible_identifier_strs.append(possible_identifier)
+def _agent(agent: Agent, path: str, issues: list[ConversionIssue]) -> Person | Entity:
+    kwargs: dict[str, Any] = {"name": agent.name}
+    if agent.email:
+        kwargs["email"] = agent.email
+    if agent.url:
+        kwargs["website"] = agent.url
+    selected_orcid = False
+    for index, identifier in enumerate(agent.identifiers):
+        if (identifier.scheme or "").lower() == "orcid" and not selected_orcid:
+            kwargs["orcid"] = identifier.value
+            selected_orcid = True
         else:
-            values = (
-                getattr(possible_identifier, "id_", None)
-                or getattr(possible_identifier, "propertyID", None)
-                or getattr(possible_identifier, "url", None)
-                or getattr(possible_identifier, "value", None)
-            )
-            possible_identifier_strs.extend(
-                [val for val in ensure_list(values) if val is not None]
-            )
-    # try to match possible identifiers to known types (doi, url, swh) and put the rest in other
-    doi_pattern = re.compile(
-        r"(?:https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}(?:\.\d+)?/[A-Za-z0-9:/_;\-\.\(\)\[\]\\]+)$"
-    )
-    swh_pattern = re.compile(r"^swh:1:(snp|rel|rev|dir|cnt):[0-9a-fA-F]{40}$")
-    identifiers = []
-    for possible_identifier_str in possible_identifier_strs:
-        if possible_identifier_str is None:
+            issues.append(_issue(f"{path}.identifiers[{index}]", "additional agent identifier is unsupported in CFF"))
+    if agent.kind == "person":
+        kwargs.pop("name")
+        if agent.affiliations:
+            kwargs["affiliation"] = agent.affiliations[0].name
+            for index in range(1, len(agent.affiliations)):
+                issues.append(_issue(f"{path}.affiliations[{index}]", "additional affiliation is unsupported in CFF"))
+            for index, affiliation in enumerate(agent.affiliations):
+                if affiliation.identifier:
+                    issues.append(_issue(f"{path}.affiliations[{index}].identifier", "affiliation identifier is unsupported in CFF"))
+        if agent.given_names:
+            kwargs["given_names"] = " ".join(agent.given_names)
+        if agent.family_names:
+            kwargs["family_names"] = " ".join(agent.family_names)
+        if not agent.given_names and not agent.family_names:
+            kwargs["given_names"] = agent.name
+        return Person(**kwargs)
+    if agent.kind == "organization":
+        for index, affiliation in enumerate(agent.affiliations):
+            issues.append(_issue(f"{path}.affiliations[{index}]", "organization affiliation is unsupported in CFF"))
+            if affiliation.identifier:
+                issues.append(_issue(f"{path}.affiliations[{index}].identifier", "affiliation identifier is unsupported in CFF"))
+        return Entity(**kwargs)
+    issues.append(_issue(path, "unknown agent kind represented as a CFF entity"))
+    for index, affiliation in enumerate(agent.affiliations):
+        issues.append(_issue(f"{path}.affiliations[{index}]", "organization affiliation is unsupported in CFF"))
+        if affiliation.identifier:
+            issues.append(_issue(f"{path}.affiliations[{index}].identifier", "affiliation identifier is unsupported in CFF"))
+    return Entity(**kwargs)
+
+
+def _identifier(identifier: Identifier, path: str) -> Identifier1 | Identifier2 | Identifier3 | Identifier4:
+    scheme = (identifier.scheme or "").lower()
+    value = identifier.value
+    if scheme == "doi":
+        match = _DOI.match(value)
+        if not match:
+            raise ConversionError(f"{path}: invalid DOI")
+        return Identifier1(type="doi", value=match.group(1))
+    if scheme in {"swh", "softwareheritage"}:
+        return Identifier3(type="swh", value=value)
+    if scheme in {"url", "uri"}:
+        return Identifier2(type="url", value=value)
+    if scheme == "other":
+        return Identifier4(type="other", value=value)
+    match = _DOI.match(value)
+    if match:
+        return Identifier1(type="doi", value=match.group(1))
+    if _SWH.match(value):
+        return Identifier3(type="swh", value=value)
+    if value.startswith(("http://", "https://")):
+        return Identifier2(type="url", value=value)
+    return Identifier4(type="other", value=value)
+
+
+def _licenses(value: list[License], issues: list[ConversionIssue]) -> tuple[str | None, str | None]:
+    selected: tuple[str | None, str | None] | None = None
+    selected_index: int | None = None
+    for index, license_ in enumerate(value):
+        candidate = license_.identifier or license_.name
+        if candidate:
+            candidate = candidate.rsplit("/", 1)[-1] if candidate.startswith("https://spdx.org/licenses/") else candidate
+        if candidate in _SPDX:
+            selected = (candidate, None)
+        elif license_.url:
+            selected = (None, license_.url)
+        else:
+            issues.append(_issue(f"licenses[{index}]", "license is not representable in CFF"))
             continue
-        doi_match = doi_pattern.search(possible_identifier_str)
-        swh_match = swh_pattern.search(possible_identifier_str)
-        if doi_match:
-            # skip primary DOI if it is present
-            if primary_doi and doi_match.group(1) == primary_doi:
-                continue
-            identifiers.append(DoiIdentifier(type="doi", value=doi_match.group(1)))
-        elif swh_match:
-            identifiers.append(SwhIdentifier(type="swh", value=swh_match.group(0)))
-        elif is_url(possible_identifier_str):
-            identifiers.append(UrlIdentifier(type="url", value=possible_identifier_str))
-        else:
-            identifiers.append(
-                OtherIdentifier(type="other", value=possible_identifier_str)
-            )
-    # remove duplicate values
-    seen = set()
-    identifiers = [
-        id_ for id_ in identifiers if id_.value not in seen and not seen.add(id_.value)
-    ]
-    return identifiers or None
+        selected_index = index
+        break
+    if selected is not None and selected_index is not None:
+        for index in range(selected_index + 1, len(value)):
+            if value[index].identifier or value[index].name or value[index].url:
+                issues.append(_issue(f"licenses[{index}]", "additional license is unsupported in CFF"))
+    return selected or (None, None)
 
 
-def codemeta_references_to_cff(citation, softwareRequirements) -> list[Reference]:
-    """returns a list of references which is a combination of
-    softwareRequirements and citation fields"""
-    # flatten all possible reference fields into a single list
-    possible_references = []
-    for field in [citation, softwareRequirements]:
-        if field is not None:
-            if isinstance(field, list):
-                possible_references.extend(field)
-            else:
-                possible_references.append(field)
-    references = []
-    type_map = {
-        "SoftwareSourceCode": "software-code",
-        "SoftwareApplication": "software",
-        "ScholarlyArticle": "article",
-        "Article": "article",
-        "WebPage": "website",
-        "WebSite": "website",
-        "Book": "book",
-        "BlogPosting": "blog",
+def _reference(resource: RelatedResource, path: str, issues: list[ConversionIssue]) -> Reference | None:
+    if resource.relation not in {"cites", "requires"}:
+        issues.append(_issue(path, f"relation {resource.relation!r} is not representable in CFF"))
+        return None
+    if not resource.title:
+        issues.append(_issue(f"{path}.title", "CFF references require a title"))
+        return None
+    if not resource.creators:
+        issues.append(_issue(f"{path}.creators", "CFF references require authors"))
+        return None
+    type_name = _REFERENCE_TYPES.get((resource.resource_type or "").lower())
+    if type_name is None:
+        type_name = "generic"
+        if resource.resource_type:
+            issues.append(_issue(f"{path}.resource_type", "unsupported resource type mapped to CFF generic reference"))
+    if resource.relation == "requires":
+        issues.append(_issue(f"{path}.relation", "CFF reference does not preserve requires dependency semantics"))
+    kwargs: dict[str, Any] = {
+        "title": resource.title,
+        "type": type_name,
+        "authors": [_agent(agent, f"{path}.creators[{i}]", issues) for i, agent in enumerate(resource.creators)],
     }
-    # if the possible reference has the required fields, then make a reference out of it
-    for possible_ref in possible_references:
-        if not isinstance(possible_ref, str):
-            try:
-                ref = Reference(
-                    type=type_map.get(possible_ref.type_, "generic"),
-                    title=possible_ref.name,
-                    authors=codemeta_actors_to_cff(possible_ref.author),
-                )
-                references.append(ref)
-            except:
-                pass
-    return references or None
+    if resource.url:
+        kwargs["url"] = resource.url
+    if resource.identifier:
+        mapped = _identifier(resource.identifier, f"{path}.identifier")
+        if mapped.type == "doi":
+            kwargs["doi"] = mapped.value
+        elif mapped.type == "url":
+            kwargs["url"] = mapped.value
+        else:
+            issues.append(_issue(f"{path}.identifier", "identifier type is not representable on a CFF reference"))
+    return Reference(**kwargs)
 
 
-def extract_main_url_from_codemeta(data: CodeMeta) -> str:
-    """get the main url from a CodeMeta object, preferring url, downloadUrl, installUrl, and then
-    relatedLink in that order
-    """
-    return get_first_if_list(
-        data.url or data.downloadUrl or data.installUrl or data.relatedLink
+def _convert(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
+    """Convert neutral software metadata to CFF, retaining deterministic issues."""
+    if not value.creators:
+        raise ConversionError("creators: CFF requires at least one author")
+
+    issues: list[ConversionIssue] = []
+    unsupported = (
+        ("publisher", value.publisher),
+        ("contributors", value.contributors),
+        ("category", value.category),
+        ("publication_year", value.publication_year),
+        ("date_created", value.date_created),
+        ("date_modified", value.date_modified),
+        ("programming_languages", value.programming_languages),
+        ("formats", value.formats),
+        ("sizes", value.sizes),
+        ("release_notes", value.release_notes),
     )
+    for path, item in unsupported:
+        if item:
+            issues.append(_issue(path, "canonical value is not representable in CFF"))
+    identifiers: list[Identifier1 | Identifier2 | Identifier3 | Identifier4] = []
+    doi: str | None = None
+    for index, item in enumerate(value.identifiers):
+        mapped = _identifier(item, f"identifiers[{index}]")
+        if mapped.type == "doi" and doi is None:
+            doi = mapped.value
+        else:
+            if mapped.type == "doi":
+                issues.append(_issue(f"identifiers[{index}]", "only the first DOI is supported as the primary CFF DOI"))
+            identifiers.append(mapped)
+
+    license_, license_url = _licenses(value.licenses, issues)
+    url = value.url or value.download_url
+    if value.url and value.download_url:
+        issues.append(_issue("download_url", "url takes precedence over download_url in CFF"))
+
+    references: list[Reference] = []
+    for index, relation in enumerate(value.relations):
+        reference = _reference(relation, f"relations[{index}]", issues)
+        if reference is not None:
+            references.append(reference)
+
+    date_released: date | None = value.date_released  # type: ignore[assignment]
+    if isinstance(value.date_released, str):
+        try:
+            date_released = date.fromisoformat(value.date_released)
+        except ValueError as exc:
+            raise ConversionError("date_released: value is not a valid ISO date") from exc
+
+    payload: dict[str, Any] = {
+        "cff_version": "1.2.0",
+        "message": "If you use this software, please cite it using the metadata from this file.",
+        "title": value.title,
+        "type": "software",
+        "abstract": value.description,
+        "authors": [_agent(agent, f"creators[{i}]", issues) for i, agent in enumerate(value.creators)],
+        "date_released": date_released,
+        "doi": doi,
+        "identifiers": identifiers or None,
+        "version": value.version,
+        "keywords": value.keywords or None,
+        "license": license_,
+        "license_url": license_url,
+        "repository": value.repository,
+        "repository_code": value.repository_code,
+        "repository_artifact": value.repository_artifact,
+        "url": url,
+        "references": references or None,
+    }
+    try:
+        result = CitationFileFormat(**payload)
+    except ValidationError as exc:
+        raise ConversionError(f"Unable to construct CitationFileFormat: {exc}") from exc
+    return ConversionResult(value=result, issues=tuple(issues))
 
 
-def canonical_to_cff(data: CanonicalCodeMeta, **custom_fields) -> CitationFileFormat:
-    """Extract all possible Citation File Format fields from a CodeMeta object based
-    on the CodeMeta crosswalk and return a CitationFileFormat object
-    """
-    licenses, license_urls = codemeta_license_to_cff(data.license)
-    primary_doi = extract_doi_from_identifier(data.identifier)
-    return CitationFileFormat(
-        **{
-            **dict(
-                cff_version="1.2.0",
-                message="If you use this software, please cite it using the metadata from this file.",
-                abstract=data.description,
-                authors=codemeta_actors_to_cff(data.author),
-                date_released=(
-                    data.datePublished.date()
-                    if isinstance(data.datePublished, datetime)
-                    else data.datePublished
-                ),
-                doi=primary_doi,
-                identifiers=extract_identifiers_from_codemeta(
-                    data, primary_doi=primary_doi
-                ),
-                keywords=ensure_list(data.keywords) or None,
-                license=get_first_if_single_list(licenses) or None,
-                license_url=get_first_if_single_list(license_urls) or None,
-                # we cannot confidently say anything in citation should be the preferred-citation
-                preferred_citation=None,
-                references=codemeta_references_to_cff(
-                    data.citation, data.softwareRequirements
-                ),
-                # repository or repository-artifact could be in codemeta url, downloadUrl, installUrl,
-                # or relatedLink, but the semantics do not match up, so there is no reliable way to
-                # extract this information
-                repository=None,
-                repository_artifact=None,
-                repository_code=data.codeRepository,
-                title=data.name,
-                type="software",
-                url=extract_main_url_from_codemeta(data),
-                version=data.version,
-            ),
-            **custom_fields,
-        }
-    )
+def software_metadata_to_cff(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
+    try:
+        return _convert(value)
+    except ConversionError:
+        raise
+    except ValidationError as exc:
+        raise ConversionError(f"Unable to construct CitationFileFormat: {exc}") from exc
 
 
-def cff_to_canonical(data: CitationFileFormat) -> CanonicalCodeMeta:
-    raise NotImplementedError(
-        "Citation File Format is not yet supported as an input format"
-    )
+__all__ = ["software_metadata_to_cff"]

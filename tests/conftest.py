@@ -4,7 +4,7 @@ import yaml
 from pathlib import Path
 from typing import Any, Literal
 
-from codemeticulous.convert import STANDARDS
+from codemeticulous.convert import VALIDATION_MODELS
 
 
 @pytest.fixture(scope="session")
@@ -34,7 +34,7 @@ def discover_test_files(test_data_dir: Path, model_name: str, specifier: str):
 @pytest.fixture
 def load_model_data():
     def _load(model_name: str, file_path: Path):
-        model_class = STANDARDS[model_name]["model"]
+        model_class = VALIDATION_MODELS[model_name]
         if model_class is None:
             raise ValueError(f"Model '{model_name}' is not registered.")
         data, file_type = load_file(file_path)

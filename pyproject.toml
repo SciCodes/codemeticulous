@@ -6,8 +6,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.1.7",
-    "pydantic2-schemaorg==0.2.0",
-    "pydantic>=2.9.2",
+    "pydantic-codemeta>=0.1.0,<0.2",
+    "pydantic>=2.9.2,<3",
     "pyyaml>=6.0.2",
 ]
 
@@ -31,3 +31,6 @@ include-package-data = false
 [tool.setuptools.packages.find]
 include = ["codemeticulous", "codemeticulous.*"]
 exclude = ["tests*", "schema"]
+
+[tool.uv.sources]
+pydantic-codemeta = { path = "../pydantic-codemeta", editable = true }
