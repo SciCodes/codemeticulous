@@ -3,7 +3,7 @@ name = "codemeticulous"
 version = "0.1.0"
 description = "validate and convert software metadata formats with pydantic"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "click>=8.1.7",
     "pydantic-codemeta>=0.1.0,<0.2",
@@ -33,4 +33,4 @@ include = ["codemeticulous", "codemeticulous.*"]
 exclude = ["tests*", "schema"]
 
 [tool.uv.sources]
-pydantic-codemeta = { path = "../pydantic-codemeta", editable = true }
+pydantic-codemeta = { git = "https://github.com/SciCodes/pydantic-codemeta.git" }
