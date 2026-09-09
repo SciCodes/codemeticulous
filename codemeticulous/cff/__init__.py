@@ -1,5 +1,11 @@
 from .convert import software_metadata_to_cff
-from .identifiers import CffIdentifier, DoiIdentifier, OtherIdentifier, SwhIdentifier, UrlIdentifier
+from .identifiers import (
+    CffIdentifier,
+    DoiIdentifier,
+    OtherIdentifier,
+    SwhIdentifier,
+    UrlIdentifier,
+)
 from .models import CitationFileFormat
 
 __all__ = [

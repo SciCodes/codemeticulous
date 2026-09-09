@@ -8,7 +8,11 @@ import click
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from codemeticulous.convert import TARGETS, VALIDATION_MODELS, convert as convert_metadata
+from codemeticulous.convert import (
+    TARGETS,
+    VALIDATION_MODELS,
+    convert as convert_metadata,
+)
 from codemeticulous.conversion import ConversionError
 
 
@@ -18,12 +22,16 @@ def cli() -> None:
 
 
 @cli.command(name="convert")
-@click.option("-f", "--from", "source_format", type=click.Choice(("codemeta",)), required=True)
+@click.option(
+    "-f", "--from", "source_format", type=click.Choice(("codemeta",)), required=True
+)
 @click.option("-t", "--to", "target_format", type=click.Choice(TARGETS), required=True)
 @click.option("-o", "--output", "output_file", type=click.File("w"), default=None)
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @click.argument("input_file", type=click.Path(exists=True))
-def convert_command(source_format: str, target_format: str, input_file, output_file, verbose: bool) -> None:
+def convert_command(
+    source_format: str, target_format: str, input_file, output_file, verbose: bool
+) -> None:
     try:
         input_data = load_file_autodetect(input_file)
         result = convert_metadata(source_format, target_format, input_data)
@@ -47,7 +55,13 @@ def convert_command(source_format: str, target_format: str, input_file, output_f
 
 
 @cli.command(name="validate")
-@click.option("-f", "--format", "format_name", type=click.Choice(tuple(VALIDATION_MODELS)), required=True)
+@click.option(
+    "-f",
+    "--format",
+    "format_name",
+    type=click.Choice(tuple(VALIDATION_MODELS)),
+    required=True,
+)
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @click.argument("input_file", type=click.Path(exists=True))
 def validate(format_name: str, input_file: str, verbose: bool) -> None:

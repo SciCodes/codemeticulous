@@ -223,9 +223,7 @@ def _agent(
     return Agent(
         kind=kind,
         name=name,
-        given_names=[
-            str(item) for item in _items(getattr(value, "given_name", None))
-        ],
+        given_names=[str(item) for item in _items(getattr(value, "given_name", None))],
         family_names=[
             str(item) for item in _items(getattr(value, "family_name", None))
         ],

@@ -67,7 +67,10 @@ def test_codemeta_to_software_metadata_maps_semantic_values() -> None:
     metadata = result.value
 
     assert metadata.title == "Tool"
-    assert metadata.creators[0].identifiers[0].value == "https://orcid.org/0000-0000-0000-0001"
+    assert (
+        metadata.creators[0].identifiers[0].value
+        == "https://orcid.org/0000-0000-0000-0001"
+    )
     assert metadata.contributors[0].roles == ["maintainer"]
     assert Identifier(value="10.1234/tool", scheme="doi") in metadata.identifiers
     assert metadata.date_released == date(2024, 6, 1)
@@ -186,7 +189,10 @@ def test_loss_issues_are_indexed_and_ordered() -> None:
             name="Tool",
             author="Unknown author",
             url=["https://example.org/tool", "https://example.org/other"],
-            downloadUrl=["https://example.org/download", "https://example.org/other-download"],
+            downloadUrl=[
+                "https://example.org/download",
+                "https://example.org/other-download",
+            ],
             futureField=True,
         )
     )
@@ -292,7 +298,9 @@ def test_relations_use_neutral_names_and_preserve_resource_types() -> None:
     url_payload = software_metadata_to_codemeta(
         SoftwareMetadata(
             title="Tool",
-            relations=[RelatedResource(relation="cites", url="https://example.org/paper")],
+            relations=[
+                RelatedResource(relation="cites", url="https://example.org/paper")
+            ],
         )
     ).value.to_jsonld()
     assert url_payload["citation"] == "https://example.org/paper"
@@ -337,9 +345,11 @@ def test_unsupported_relation_is_reported_per_element() -> None:
     result = software_metadata_to_codemeta(
         SoftwareMetadata(
             title="Tool",
-            relations=[RelatedResource(
-                relation="unknown_relation", url="https://example.org/x"
-            )],
+            relations=[
+                RelatedResource(
+                    relation="unknown_relation", url="https://example.org/x"
+                )
+            ],
         )
     )
 

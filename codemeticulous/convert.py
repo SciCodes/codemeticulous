@@ -7,7 +7,10 @@ from pydantic import BaseModel, ValidationError
 
 from codemeticulous.cff.convert import software_metadata_to_cff
 from codemeticulous.cff.models import CitationFileFormat
-from codemeticulous.codemeta.convert import codemeta_to_software_metadata, software_metadata_to_codemeta
+from codemeticulous.codemeta.convert import (
+    codemeta_to_software_metadata,
+    software_metadata_to_codemeta,
+)
 from codemeticulous.codemeta.models import CodeMetaV3
 from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
 from codemeticulous.datacite.convert import software_metadata_to_datacite
@@ -40,7 +43,9 @@ def convert(
             else source_data
         )
         if not isinstance(source, CodeMetaV3):
-            raise ConversionError("codemeta source data must be a mapping or CodeMetaV3")
+            raise ConversionError(
+                "codemeta source data must be a mapping or CodeMetaV3"
+            )
     except ValidationError as exc:
         raise ConversionError(f"Invalid codemeta source: {exc}") from exc
 

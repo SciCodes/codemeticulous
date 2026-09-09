@@ -10,7 +10,9 @@ UrlIdentifier: TypeAlias = Identifier2
 SwhIdentifier: TypeAlias = Identifier3
 OtherIdentifier: TypeAlias = Identifier4
 
-CffIdentifier: TypeAlias = DoiIdentifier | UrlIdentifier | SwhIdentifier | OtherIdentifier
+CffIdentifier: TypeAlias = (
+    DoiIdentifier | UrlIdentifier | SwhIdentifier | OtherIdentifier
+)
 
 __all__ = [
     "CffIdentifier",

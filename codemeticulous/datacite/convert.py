@@ -30,7 +30,14 @@ from codemeticulous.datacite.models import (
     NameType,
     ResourceTypeGeneral,
 )
-from codemeticulous.models import Agent, Contribution, Identifier, License, RelatedResource, SoftwareMetadata
+from codemeticulous.models import (
+    Agent,
+    Contribution,
+    Identifier,
+    License,
+    RelatedResource,
+    SoftwareMetadata,
+)
 
 
 ROLE_TYPES = {
@@ -86,29 +93,47 @@ def _date(value: date | str | None, date_type: DateType) -> DateModel | None:
     return DateModel(date=value, dateType=date_type)
 
 
-def _agent_name_parts(agent: Agent, path: str, issues: list[ConversionIssue]) -> dict[str, Any]:
+def _agent_name_parts(
+    agent: Agent, path: str, issues: list[ConversionIssue]
+) -> dict[str, Any]:
     kwargs: dict[str, Any] = {
         "name": agent.name,
         "givenName": agent.given_names[0] if agent.given_names else None,
         "familyName": agent.family_names[0] if agent.family_names else None,
     }
-    for field, values in (("given_names", agent.given_names), ("family_names", agent.family_names)):
+    for field, values in (
+        ("given_names", agent.given_names),
+        ("family_names", agent.family_names),
+    ):
         for index in range(1, len(values)):
-            issues.append(_issue(f"{path}.{field}[{index}]", "additional name values are unsupported"))
+            issues.append(
+                _issue(
+                    f"{path}.{field}[{index}]", "additional name values are unsupported"
+                )
+            )
     if agent.kind == "person":
         kwargs["nameType"] = NameType.Personal
     elif agent.kind == "organization":
         kwargs["nameType"] = NameType.Organizational
     else:
-        issues.append(_issue(f"{path}.kind", "unknown agent kind has no DataCite name type"))
+        issues.append(
+            _issue(f"{path}.kind", "unknown agent kind has no DataCite name type")
+        )
     return kwargs
 
 
-def _name_identifiers(agent: Agent, path: str, issues: list[ConversionIssue]) -> list[NameIdentifier] | None:
+def _name_identifiers(
+    agent: Agent, path: str, issues: list[ConversionIssue]
+) -> list[NameIdentifier] | None:
     result = []
     for index, identifier in enumerate(agent.identifiers):
         if not identifier.scheme:
-            issues.append(_issue(f"{path}.identifiers[{index}].scheme", "identifier scheme is required by DataCite"))
+            issues.append(
+                _issue(
+                    f"{path}.identifiers[{index}].scheme",
+                    "identifier scheme is required by DataCite",
+                )
+            )
             continue
         result.append(
             NameIdentifier(
@@ -119,7 +144,9 @@ def _name_identifiers(agent: Agent, path: str, issues: list[ConversionIssue]) ->
     return result or None
 
 
-def _affiliations(agent: Agent, path: str, issues: list[ConversionIssue]) -> list[AffiliationItem] | None:
+def _affiliations(
+    agent: Agent, path: str, issues: list[ConversionIssue]
+) -> list[AffiliationItem] | None:
     result = []
     for index, affiliation in enumerate(agent.affiliations):
         kwargs: dict[str, Any] = {"name": affiliation.name}
@@ -128,13 +155,20 @@ def _affiliations(agent: Agent, path: str, issues: list[ConversionIssue]) -> lis
             if affiliation.identifier.scheme:
                 kwargs["affiliationIdentifierScheme"] = affiliation.identifier.scheme
             else:
-                issues.append(_issue(f"{path}.affiliations[{index}].identifier", "affiliation identifier scheme is required by DataCite"))
+                issues.append(
+                    _issue(
+                        f"{path}.affiliations[{index}].identifier",
+                        "affiliation identifier scheme is required by DataCite",
+                    )
+                )
                 kwargs.pop("affiliationIdentifier")
         result.append(AffiliationItem(**kwargs))
     return result or None
 
 
-def _person_fields(agent: Agent, path: str, issues: list[ConversionIssue]) -> dict[str, Any]:
+def _person_fields(
+    agent: Agent, path: str, issues: list[ConversionIssue]
+) -> dict[str, Any]:
     fields = _agent_name_parts(agent, path, issues)
     if agent.email:
         issues.append(_issue(f"{path}.email", "email is unsupported by DataCite"))
@@ -149,20 +183,31 @@ def _creator(agent: Agent, path: str, issues: list[ConversionIssue]) -> Creator:
     return Creator(**_person_fields(agent, path, issues))
 
 
-def _contributor_type(roles: list[str], path: str, issues: list[ConversionIssue]) -> ContributorType:
+def _contributor_type(
+    roles: list[str], path: str, issues: list[ConversionIssue]
+) -> ContributorType:
     if not roles:
         return ContributorType.Other
     normalized = roles[0].strip().lower()
     result = ROLE_TYPES.get(normalized)
     if result is None:
-        issues.append(_issue(f"{path}.roles[0]", "role is not representable as a DataCite contributor type"))
+        issues.append(
+            _issue(
+                f"{path}.roles[0]",
+                "role is not representable as a DataCite contributor type",
+            )
+        )
         result = ContributorType.Other
     for index in range(1, len(roles)):
-        issues.append(_issue(f"{path}.roles[{index}]", "additional roles are unsupported"))
+        issues.append(
+            _issue(f"{path}.roles[{index}]", "additional roles are unsupported")
+        )
     return result
 
 
-def _contributor(contribution: Contribution, path: str, issues: list[ConversionIssue]) -> Contributor:
+def _contributor(
+    contribution: Contribution, path: str, issues: list[ConversionIssue]
+) -> Contributor:
     fields = _person_fields(contribution.agent, f"{path}.agent", issues)
     fields["contributorType"] = _contributor_type(contribution.roles, path, issues)
     return Contributor(**fields)
@@ -172,38 +217,62 @@ def _publisher(agent: Agent, path: str, issues: list[ConversionIssue]) -> Publis
     fields: dict[str, Any] = {"name": agent.name}
     for field in ("given_names", "family_names", "email", "url"):
         if getattr(agent, field):
-            issues.append(_issue(f"{path}.{field}", "publisher field is unsupported by DataCite"))
+            issues.append(
+                _issue(f"{path}.{field}", "publisher field is unsupported by DataCite")
+            )
     if agent.identifiers:
         first = agent.identifiers[0]
         fields["publisherIdentifier"] = first.value
         fields["publisherIdentifierScheme"] = first.scheme
         for index in range(1, len(agent.identifiers)):
-            issues.append(_issue(f"{path}.identifiers[{index}]", "additional publisher identifiers are unsupported"))
+            issues.append(
+                _issue(
+                    f"{path}.identifiers[{index}]",
+                    "additional publisher identifiers are unsupported",
+                )
+            )
     for index in range(len(agent.affiliations)):
-        issues.append(_issue(f"{path}.affiliations[{index}]", "publisher affiliations are unsupported"))
+        issues.append(
+            _issue(
+                f"{path}.affiliations[{index}]",
+                "publisher affiliations are unsupported",
+            )
+        )
     return Publisher(**fields)
 
 
-def _identifier_type(identifier: Identifier, path: str, issues: list[ConversionIssue]) -> RelatedIdentifierType | None:
+def _identifier_type(
+    identifier: Identifier, path: str, issues: list[ConversionIssue]
+) -> RelatedIdentifierType | None:
     if not identifier.scheme:
-        issues.append(_issue(f"{path}.scheme", "related identifier scheme is required by DataCite"))
+        issues.append(
+            _issue(
+                f"{path}.scheme", "related identifier scheme is required by DataCite"
+            )
+        )
         return None
     normalized = identifier.scheme.lower()
     for item in RelatedIdentifierType:
         if item.value.lower() == normalized:
             return item
-    issues.append(_issue(f"{path}.scheme", "related identifier scheme is unsupported by DataCite"))
+    issues.append(
+        _issue(f"{path}.scheme", "related identifier scheme is unsupported by DataCite")
+    )
     return None
 
 
-def _related(resource: RelatedResource, index: int, issues: list[ConversionIssue]) -> RelatedIdentifier | None:
+def _related(
+    resource: RelatedResource, index: int, issues: list[ConversionIssue]
+) -> RelatedIdentifier | None:
     path = f"relations[{index}]"
     identifier = resource.identifier
     url_identifier = identifier is None and resource.url is not None
     if identifier is None and resource.url is not None:
         identifier = Identifier(value=resource.url, scheme="URL")
     if not identifier:
-        issues.append(_issue(f"{path}.identifier", "related resource requires an identifier"))
+        issues.append(
+            _issue(f"{path}.identifier", "related resource requires an identifier")
+        )
         return None
     identifier_type = _identifier_type(identifier, f"{path}.identifier", issues)
     if identifier_type is None:
@@ -219,13 +288,27 @@ def _related(resource: RelatedResource, index: int, issues: list[ConversionIssue
         issues.append(_issue(path, "relation is unsupported by DataCite"))
         return None
     if resource.title:
-        issues.append(_issue(f"{path}.title", "related resource field is unsupported by DataCite"))
+        issues.append(
+            _issue(f"{path}.title", "related resource field is unsupported by DataCite")
+        )
     if resource.resource_type:
-        issues.append(_issue(f"{path}.resource_type", "related resource field is unsupported by DataCite"))
+        issues.append(
+            _issue(
+                f"{path}.resource_type",
+                "related resource field is unsupported by DataCite",
+            )
+        )
     if resource.url and not url_identifier:
-        issues.append(_issue(f"{path}.url", "related resource field is unsupported by DataCite"))
+        issues.append(
+            _issue(f"{path}.url", "related resource field is unsupported by DataCite")
+        )
     for creator_index in range(len(resource.creators)):
-        issues.append(_issue(f"{path}.creators[{creator_index}]", "related resource creators are unsupported by DataCite"))
+        issues.append(
+            _issue(
+                f"{path}.creators[{creator_index}]",
+                "related resource creators are unsupported by DataCite",
+            )
+        )
     return RelatedIdentifier(
         relatedIdentifier=identifier.value,
         relatedIdentifierType=identifier_type,
@@ -233,7 +316,9 @@ def _related(resource: RelatedResource, index: int, issues: list[ConversionIssue
     )
 
 
-def _software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[DataCite]:
+def _software_metadata_to_datacite(
+    value: SoftwareMetadata,
+) -> ConversionResult[DataCite]:
     issues: list[ConversionIssue] = []
     if not value.creators:
         raise ConversionError("DataCite requires at least one creator")
@@ -247,7 +332,11 @@ def _software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[
 
     descriptions = []
     if value.description:
-        descriptions.append(Description(description=value.description, descriptionType=DescriptionType.Abstract))
+        descriptions.append(
+            Description(
+                description=value.description, descriptionType=DescriptionType.Abstract
+            )
+        )
     descriptions.extend(
         Description(description=note, descriptionType=DescriptionType.TechnicalInfo)
         for note in value.release_notes
@@ -255,9 +344,15 @@ def _software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[
     rights = []
     for index, item in enumerate(value.licenses):
         if not item.identifier and not item.name and not item.url:
-            issues.append(_issue(f"licenses[{index}]", "empty license is not representable"))
+            issues.append(
+                _issue(f"licenses[{index}]", "empty license is not representable")
+            )
             continue
-        rights.append(RightsListItem(rights=item.name, rightsUri=item.url, rightsIdentifier=item.identifier))
+        rights.append(
+            RightsListItem(
+                rights=item.name, rightsUri=item.url, rightsIdentifier=item.identifier
+            )
+        )
     identifiers = list(value.identifiers)
     for index, identifier in enumerate(identifiers):
         if (identifier.scheme or "").lower() == "doi":
@@ -265,7 +360,14 @@ def _software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[
                 value=_normalize_doi(identifier.value, f"identifiers[{index}]"),
                 scheme=identifier.scheme,
             )
-    doi_index = next((index for index, item in enumerate(identifiers) if (item.scheme or "").lower() == "doi"), None)
+    doi_index = next(
+        (
+            index
+            for index, item in enumerate(identifiers)
+            if (item.scheme or "").lower() == "doi"
+        ),
+        None,
+    )
     doi = identifiers[doi_index].value if doi_index is not None else None
     doi_prefix = doi.split("/", 1)[0] if doi and "/" in doi else None
     doi_suffix = doi.split("/", 1)[1] if doi and "/" in doi else None
@@ -274,9 +376,17 @@ def _software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[
         if index == doi_index:
             continue
         if (identifier.scheme or "").lower() == "doi":
-            issues.append(_issue(f"identifiers[{index}]", "additional DOI demoted to an alternate identifier"))
+            issues.append(
+                _issue(
+                    f"identifiers[{index}]",
+                    "additional DOI demoted to an alternate identifier",
+                )
+            )
         alternate_identifiers.append(
-            {"alternateIdentifier": identifier.value, "alternateIdentifierType": identifier.scheme or "Other"}
+            {
+                "alternateIdentifier": identifier.value,
+                "alternateIdentifierType": identifier.scheme or "Other",
+            }
         )
 
     dates = [
@@ -291,22 +401,41 @@ def _software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[
     if value.repository:
         issues.append(_issue("repository", "repository is unsupported by DataCite"))
     if value.repository_code:
-        issues.append(_issue("repository_code", "repository_code is unsupported by DataCite"))
+        issues.append(
+            _issue("repository_code", "repository_code is unsupported by DataCite")
+        )
     if value.repository_artifact:
-        issues.append(_issue("repository_artifact", "repository_artifact is unsupported by DataCite"))
+        issues.append(
+            _issue(
+                "repository_artifact", "repository_artifact is unsupported by DataCite"
+            )
+        )
     if value.download_url:
         issues.append(_issue("download_url", "download URL is unsupported by DataCite"))
 
-    creators = [_creator(agent, f"creators[{index}]", issues) for index, agent in enumerate(value.creators)]
-    contributors = [_contributor(item, f"contributors[{index}]", issues) for index, item in enumerate(value.contributors)]
-    related = [item for index, resource in enumerate(value.relations) if (item := _related(resource, index, issues)) is not None]
+    creators = [
+        _creator(agent, f"creators[{index}]", issues)
+        for index, agent in enumerate(value.creators)
+    ]
+    contributors = [
+        _contributor(item, f"contributors[{index}]", issues)
+        for index, item in enumerate(value.contributors)
+    ]
+    related = [
+        item
+        for index, resource in enumerate(value.relations)
+        if (item := _related(resource, index, issues)) is not None
+    ]
 
     payload: dict[str, Any] = {
         "doi": doi,
         "prefix": doi_prefix,
         "suffix": doi_suffix,
         "url": value.url,
-        "types": Types(resourceType=value.category, resourceTypeGeneral=ResourceTypeGeneral.Software),
+        "types": Types(
+            resourceType=value.category,
+            resourceTypeGeneral=ResourceTypeGeneral.Software,
+        ),
         "creators": creators,
         "titles": [Title(title=value.title)],
         "publisher": _publisher(value.publisher, "publisher", issues),
@@ -329,7 +458,9 @@ def _software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[
     return ConversionResult(value=result, issues=tuple(issues))
 
 
-def software_metadata_to_datacite(value: SoftwareMetadata) -> ConversionResult[DataCite]:
+def software_metadata_to_datacite(
+    value: SoftwareMetadata,
+) -> ConversionResult[DataCite]:
     """Convert canonical software metadata to a validated DataCite record."""
 
     try:

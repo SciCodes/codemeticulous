@@ -25,4 +25,5 @@ class ConversionResult(_ConversionModel, Generic[T]):
 class ConversionError(ValueError):
     """Raised when a conversion cannot produce canonical metadata."""
 
+
 __all__ = ["ConversionError", "ConversionIssue", "ConversionResult"]

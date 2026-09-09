@@ -9,7 +9,13 @@ from typing import Any
 from pydantic import ValidationError
 
 from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
-from codemeticulous.models import Agent, Identifier, License, RelatedResource, SoftwareMetadata
+from codemeticulous.models import (
+    Agent,
+    Identifier,
+    License,
+    RelatedResource,
+    SoftwareMetadata,
+)
 from codemeticulous.cff.identifiers import (
     CffIdentifier,
     DoiIdentifier,
@@ -26,7 +32,9 @@ from codemeticulous.cff.models import (
 )
 
 
-_DOI = re.compile(r"^(?:https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}(?:\.\d+)?/[A-Za-z0-9:/_;\-.()\[\]\\]+)$")
+_DOI = re.compile(
+    r"^(?:https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}(?:\.\d+)?/[A-Za-z0-9:/_;\-.()\[\]\\]+)$"
+)
 _SWH = re.compile(r"^swh:1:(?:snp|rel|rev|dir|cnt):[0-9a-fA-F]{40}$")
 _SPDX = {item.value for item in LicenseEnum}
 _REFERENCE_TYPES = {
@@ -57,16 +65,31 @@ def _agent(agent: Agent, path: str, issues: list[ConversionIssue]) -> Person | E
             kwargs["orcid"] = identifier.value
             selected_orcid = True
         else:
-            issues.append(_issue(f"{path}.identifiers[{index}]", "additional agent identifier is unsupported in CFF"))
+            issues.append(
+                _issue(
+                    f"{path}.identifiers[{index}]",
+                    "additional agent identifier is unsupported in CFF",
+                )
+            )
     if agent.kind == "person":
         kwargs.pop("name")
         if agent.affiliations:
             kwargs["affiliation"] = agent.affiliations[0].name
             for index in range(1, len(agent.affiliations)):
-                issues.append(_issue(f"{path}.affiliations[{index}]", "additional affiliation is unsupported in CFF"))
+                issues.append(
+                    _issue(
+                        f"{path}.affiliations[{index}]",
+                        "additional affiliation is unsupported in CFF",
+                    )
+                )
             for index, affiliation in enumerate(agent.affiliations):
                 if affiliation.identifier:
-                    issues.append(_issue(f"{path}.affiliations[{index}].identifier", "affiliation identifier is unsupported in CFF"))
+                    issues.append(
+                        _issue(
+                            f"{path}.affiliations[{index}].identifier",
+                            "affiliation identifier is unsupported in CFF",
+                        )
+                    )
         if agent.given_names:
             kwargs["given_names"] = " ".join(agent.given_names)
         if agent.family_names:
@@ -76,15 +99,35 @@ def _agent(agent: Agent, path: str, issues: list[ConversionIssue]) -> Person | E
         return Person(**kwargs)
     if agent.kind == "organization":
         for index, affiliation in enumerate(agent.affiliations):
-            issues.append(_issue(f"{path}.affiliations[{index}]", "organization affiliation is unsupported in CFF"))
+            issues.append(
+                _issue(
+                    f"{path}.affiliations[{index}]",
+                    "organization affiliation is unsupported in CFF",
+                )
+            )
             if affiliation.identifier:
-                issues.append(_issue(f"{path}.affiliations[{index}].identifier", "affiliation identifier is unsupported in CFF"))
+                issues.append(
+                    _issue(
+                        f"{path}.affiliations[{index}].identifier",
+                        "affiliation identifier is unsupported in CFF",
+                    )
+                )
         return Entity(**kwargs)
     issues.append(_issue(path, "unknown agent kind represented as a CFF entity"))
     for index, affiliation in enumerate(agent.affiliations):
-        issues.append(_issue(f"{path}.affiliations[{index}]", "organization affiliation is unsupported in CFF"))
+        issues.append(
+            _issue(
+                f"{path}.affiliations[{index}]",
+                "organization affiliation is unsupported in CFF",
+            )
+        )
         if affiliation.identifier:
-            issues.append(_issue(f"{path}.affiliations[{index}].identifier", "affiliation identifier is unsupported in CFF"))
+            issues.append(
+                _issue(
+                    f"{path}.affiliations[{index}].identifier",
+                    "affiliation identifier is unsupported in CFF",
+                )
+            )
     return Entity(**kwargs)
 
 
@@ -112,32 +155,48 @@ def _identifier(identifier: Identifier, path: str) -> CffIdentifier:
     return OtherIdentifier(type="other", value=value)
 
 
-def _licenses(value: list[License], issues: list[ConversionIssue]) -> tuple[str | None, str | None]:
+def _licenses(
+    value: list[License], issues: list[ConversionIssue]
+) -> tuple[str | None, str | None]:
     selected: tuple[str | None, str | None] | None = None
     selected_index: int | None = None
     for index, license_ in enumerate(value):
         candidate = license_.identifier or license_.name
         if candidate:
-            candidate = candidate.rsplit("/", 1)[-1] if candidate.startswith("https://spdx.org/licenses/") else candidate
+            candidate = (
+                candidate.rsplit("/", 1)[-1]
+                if candidate.startswith("https://spdx.org/licenses/")
+                else candidate
+            )
         if candidate in _SPDX:
             selected = (candidate, None)
         elif license_.url:
             selected = (None, license_.url)
         else:
-            issues.append(_issue(f"licenses[{index}]", "license is not representable in CFF"))
+            issues.append(
+                _issue(f"licenses[{index}]", "license is not representable in CFF")
+            )
             continue
         selected_index = index
         break
     if selected is not None and selected_index is not None:
         for index in range(selected_index + 1, len(value)):
             if value[index].identifier or value[index].name or value[index].url:
-                issues.append(_issue(f"licenses[{index}]", "additional license is unsupported in CFF"))
+                issues.append(
+                    _issue(
+                        f"licenses[{index}]", "additional license is unsupported in CFF"
+                    )
+                )
     return selected or (None, None)
 
 
-def _reference(resource: RelatedResource, path: str, issues: list[ConversionIssue]) -> Reference | None:
+def _reference(
+    resource: RelatedResource, path: str, issues: list[ConversionIssue]
+) -> Reference | None:
     if resource.relation not in {"cites", "requires"}:
-        issues.append(_issue(path, f"relation {resource.relation!r} is not representable in CFF"))
+        issues.append(
+            _issue(path, f"relation {resource.relation!r} is not representable in CFF")
+        )
         return None
     if not resource.title:
         issues.append(_issue(f"{path}.title", "CFF references require a title"))
@@ -149,13 +208,26 @@ def _reference(resource: RelatedResource, path: str, issues: list[ConversionIssu
     if type_name is None:
         type_name = "generic"
         if resource.resource_type:
-            issues.append(_issue(f"{path}.resource_type", "unsupported resource type mapped to CFF generic reference"))
+            issues.append(
+                _issue(
+                    f"{path}.resource_type",
+                    "unsupported resource type mapped to CFF generic reference",
+                )
+            )
     if resource.relation == "requires":
-        issues.append(_issue(f"{path}.relation", "CFF reference does not preserve requires dependency semantics"))
+        issues.append(
+            _issue(
+                f"{path}.relation",
+                "CFF reference does not preserve requires dependency semantics",
+            )
+        )
     kwargs: dict[str, Any] = {
         "title": resource.title,
         "type": type_name,
-        "authors": [_agent(agent, f"{path}.creators[{i}]", issues) for i, agent in enumerate(resource.creators)],
+        "authors": [
+            _agent(agent, f"{path}.creators[{i}]", issues)
+            for i, agent in enumerate(resource.creators)
+        ],
     }
     if resource.url:
         kwargs["url"] = resource.url
@@ -166,7 +238,12 @@ def _reference(resource: RelatedResource, path: str, issues: list[ConversionIssu
         elif mapped.type == "url":
             kwargs["url"] = mapped.value
         else:
-            issues.append(_issue(f"{path}.identifier", "identifier type is not representable on a CFF reference"))
+            issues.append(
+                _issue(
+                    f"{path}.identifier",
+                    "identifier type is not representable on a CFF reference",
+                )
+            )
     return Reference(**kwargs)
 
 
@@ -199,13 +276,20 @@ def _convert(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
             doi = mapped.value
         else:
             if mapped.type == "doi":
-                issues.append(_issue(f"identifiers[{index}]", "only the first DOI is supported as the primary CFF DOI"))
+                issues.append(
+                    _issue(
+                        f"identifiers[{index}]",
+                        "only the first DOI is supported as the primary CFF DOI",
+                    )
+                )
             identifiers.append(mapped)
 
     license_, license_url = _licenses(value.licenses, issues)
     url = value.url or value.download_url
     if value.url and value.download_url:
-        issues.append(_issue("download_url", "url takes precedence over download_url in CFF"))
+        issues.append(
+            _issue("download_url", "url takes precedence over download_url in CFF")
+        )
 
     references: list[Reference] = []
     for index, relation in enumerate(value.relations):
@@ -218,7 +302,9 @@ def _convert(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
         try:
             date_released = date.fromisoformat(value.date_released)
         except ValueError as exc:
-            raise ConversionError("date_released: value is not a valid ISO date") from exc
+            raise ConversionError(
+                "date_released: value is not a valid ISO date"
+            ) from exc
 
     payload: dict[str, Any] = {
         "cff_version": "1.2.0",
@@ -226,7 +312,10 @@ def _convert(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
         "title": value.title,
         "type": "software",
         "abstract": value.description,
-        "authors": [_agent(agent, f"creators[{i}]", issues) for i, agent in enumerate(value.creators)],
+        "authors": [
+            _agent(agent, f"creators[{i}]", issues)
+            for i, agent in enumerate(value.creators)
+        ],
         "date_released": date_released,
         "doi": doi,
         "identifiers": identifiers or None,
@@ -247,7 +336,9 @@ def _convert(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
     return ConversionResult(value=result, issues=tuple(issues))
 
 
-def software_metadata_to_cff(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
+def software_metadata_to_cff(
+    value: SoftwareMetadata,
+) -> ConversionResult[CitationFileFormat]:
     try:
         return _convert(value)
     except ConversionError:

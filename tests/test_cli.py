@@ -16,7 +16,14 @@ def test_cli_convert_prints_document_and_loss_diagnostics() -> None:
 
         result = runner.invoke(
             cli,
-            ["convert", "--from", "codemeta", "--to", "software-metadata", "input.json"],
+            [
+                "convert",
+                "--from",
+                "codemeta",
+                "--to",
+                "software-metadata",
+                "input.json",
+            ],
         )
 
     assert result.exit_code == 0
@@ -45,7 +52,14 @@ def test_cli_convert_failure_is_nonzero() -> None:
 
         result = runner.invoke(
             cli,
-            ["convert", "--from", "codemeta", "--to", "software-metadata", "input.json"],
+            [
+                "convert",
+                "--from",
+                "codemeta",
+                "--to",
+                "software-metadata",
+                "input.json",
+            ],
         )
 
     assert result.exit_code != 0

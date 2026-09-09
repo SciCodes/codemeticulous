@@ -3,22 +3,43 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
-from codemeticulous.cff import DoiIdentifier, OtherIdentifier, SwhIdentifier, UrlIdentifier
+from codemeticulous.cff import (
+    DoiIdentifier,
+    OtherIdentifier,
+    SwhIdentifier,
+    UrlIdentifier,
+)
 from codemeticulous.cff.convert import software_metadata_to_cff
 from codemeticulous.conversion import ConversionError
-from codemeticulous.models import Affiliation, Agent, Contribution, Identifier, License, RelatedResource, SoftwareMetadata
+from codemeticulous.models import (
+    Affiliation,
+    Agent,
+    Contribution,
+    Identifier,
+    License,
+    RelatedResource,
+    SoftwareMetadata,
+)
 
 
 def person(name: str = "Ada Lovelace") -> Agent:
-    return Agent(kind="person", name=name, given_names=["Ada"], family_names=["Lovelace"])
+    return Agent(
+        kind="person", name=name, given_names=["Ada"], family_names=["Lovelace"]
+    )
 
 
 def test_public_identifier_names_preserve_generated_validation() -> None:
     assert DoiIdentifier(type="doi", value="10.1234/demo").type == "doi"
-    assert str(UrlIdentifier(type="url", value="https://example.com/id").value) == "https://example.com/id"
-    assert SwhIdentifier(
-        type="swh", value="swh:1:rev:0000000000000000000000000000000000000000"
-    ).type == "swh"
+    assert (
+        str(UrlIdentifier(type="url", value="https://example.com/id").value)
+        == "https://example.com/id"
+    )
+    assert (
+        SwhIdentifier(
+            type="swh", value="swh:1:rev:0000000000000000000000000000000000000000"
+        ).type
+        == "swh"
+    )
     assert OtherIdentifier(type="other", value="local-id").value == "local-id"
 
     with pytest.raises(ValidationError):
@@ -65,7 +86,10 @@ def test_typed_license_and_identifiers() -> None:
             creators=[person()],
             identifiers=[
                 Identifier(value="10.1234/demo", scheme="doi"),
-                Identifier(value="swh:1:rev:0000000000000000000000000000000000000000", scheme="swh"),
+                Identifier(
+                    value="swh:1:rev:0000000000000000000000000000000000000000",
+                    scheme="swh",
+                ),
                 Identifier(value="https://example.com/id", scheme="url"),
             ],
             licenses=[License(identifier="MIT")],
@@ -126,8 +150,16 @@ def test_unsupported_top_level_values_have_fixed_order() -> None:
         release_notes=["first release"],
     )
     assert [issue.path for issue in software_metadata_to_cff(metadata).issues] == [
-        "publisher", "contributors", "category", "publication_year", "date_created",
-        "date_modified", "programming_languages", "formats", "sizes", "release_notes",
+        "publisher",
+        "contributors",
+        "category",
+        "publication_year",
+        "date_created",
+        "date_modified",
+        "programming_languages",
+        "formats",
+        "sizes",
+        "release_notes",
     ]
 
 
@@ -135,30 +167,52 @@ def test_agent_and_license_losses_are_indexed() -> None:
     creator = Agent(
         kind="organization",
         name="Team",
-        identifiers=[Identifier(value="https://orcid.org/1", scheme="orcid"), Identifier(value="x")],
-        affiliations=[Affiliation(name="Institute", identifier=Identifier(value="ror:1"))],
+        identifiers=[
+            Identifier(value="https://orcid.org/1", scheme="orcid"),
+            Identifier(value="x"),
+        ],
+        affiliations=[
+            Affiliation(name="Institute", identifier=Identifier(value="ror:1"))
+        ],
     )
     result = software_metadata_to_cff(
         SoftwareMetadata(
-            title="Demo", creators=[creator],
-            licenses=[License(name="custom"), License(identifier="MIT"), License(identifier="Apache-2.0")],
+            title="Demo",
+            creators=[creator],
+            licenses=[
+                License(name="custom"),
+                License(identifier="MIT"),
+                License(identifier="Apache-2.0"),
+            ],
         )
     )
     assert [issue.path for issue in result.issues] == [
-        "licenses[0]", "licenses[2]", "creators[0].identifiers[1]",
-        "creators[0].affiliations[0]", "creators[0].affiliations[0].identifier",
+        "licenses[0]",
+        "licenses[2]",
+        "creators[0].identifiers[1]",
+        "creators[0].affiliations[0]",
+        "creators[0].affiliations[0].identifier",
     ]
 
 
 def test_relation_type_and_requires_semantics_are_reported() -> None:
     result = software_metadata_to_cff(
         SoftwareMetadata(
-            title="Demo", creators=[person()],
-            relations=[RelatedResource(relation="requires", resource_type="mystery", title="Dependency", creators=[person()])],
+            title="Demo",
+            creators=[person()],
+            relations=[
+                RelatedResource(
+                    relation="requires",
+                    resource_type="mystery",
+                    title="Dependency",
+                    creators=[person()],
+                )
+            ],
         )
     )
     assert [issue.path for issue in result.issues] == [
-        "relations[0].resource_type", "relations[0].relation"
+        "relations[0].resource_type",
+        "relations[0].relation",
     ]
     assert result.value.references[0].type.value == "generic"
 
@@ -166,5 +220,8 @@ def test_relation_type_and_requires_semantics_are_reported() -> None:
 def test_nested_target_validation_is_conversion_error() -> None:
     with pytest.raises(ConversionError, match="CitationFileFormat"):
         software_metadata_to_cff(
-            SoftwareMetadata(title="Demo", creators=[Agent(kind="person", name="A", email="not-an-email")])
+            SoftwareMetadata(
+                title="Demo",
+                creators=[Agent(kind="person", name="A", email="not-an-email")],
+            )
         )
