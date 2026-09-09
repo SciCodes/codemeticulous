@@ -10,13 +10,16 @@ from pydantic import ValidationError
 
 from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
 from codemeticulous.models import Agent, Identifier, License, RelatedResource, SoftwareMetadata
+from codemeticulous.cff.identifiers import (
+    CffIdentifier,
+    DoiIdentifier,
+    OtherIdentifier,
+    SwhIdentifier,
+    UrlIdentifier,
+)
 from codemeticulous.cff.models import (
     CitationFileFormat,
     Entity,
-    Identifier1,
-    Identifier2,
-    Identifier3,
-    Identifier4,
     LicenseEnum,
     Person,
     Reference,
@@ -85,28 +88,28 @@ def _agent(agent: Agent, path: str, issues: list[ConversionIssue]) -> Person | E
     return Entity(**kwargs)
 
 
-def _identifier(identifier: Identifier, path: str) -> Identifier1 | Identifier2 | Identifier3 | Identifier4:
+def _identifier(identifier: Identifier, path: str) -> CffIdentifier:
     scheme = (identifier.scheme or "").lower()
     value = identifier.value
     if scheme == "doi":
         match = _DOI.match(value)
         if not match:
             raise ConversionError(f"{path}: invalid DOI")
-        return Identifier1(type="doi", value=match.group(1))
+        return DoiIdentifier(type="doi", value=match.group(1))
     if scheme in {"swh", "softwareheritage"}:
-        return Identifier3(type="swh", value=value)
+        return SwhIdentifier(type="swh", value=value)
     if scheme in {"url", "uri"}:
-        return Identifier2(type="url", value=value)
+        return UrlIdentifier(type="url", value=value)
     if scheme == "other":
-        return Identifier4(type="other", value=value)
+        return OtherIdentifier(type="other", value=value)
     match = _DOI.match(value)
     if match:
-        return Identifier1(type="doi", value=match.group(1))
+        return DoiIdentifier(type="doi", value=match.group(1))
     if _SWH.match(value):
-        return Identifier3(type="swh", value=value)
+        return SwhIdentifier(type="swh", value=value)
     if value.startswith(("http://", "https://")):
-        return Identifier2(type="url", value=value)
-    return Identifier4(type="other", value=value)
+        return UrlIdentifier(type="url", value=value)
+    return OtherIdentifier(type="other", value=value)
 
 
 def _licenses(value: list[License], issues: list[ConversionIssue]) -> tuple[str | None, str | None]:
@@ -188,7 +191,7 @@ def _convert(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
     for path, item in unsupported:
         if item:
             issues.append(_issue(path, "canonical value is not representable in CFF"))
-    identifiers: list[Identifier1 | Identifier2 | Identifier3 | Identifier4] = []
+    identifiers: list[CffIdentifier] = []
     doi: str | None = None
     for index, item in enumerate(value.identifiers):
         mapped = _identifier(item, f"identifiers[{index}]")

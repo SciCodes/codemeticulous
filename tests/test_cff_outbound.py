@@ -1,7 +1,9 @@
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
+from codemeticulous.cff import DoiIdentifier, OtherIdentifier, SwhIdentifier, UrlIdentifier
 from codemeticulous.cff.convert import software_metadata_to_cff
 from codemeticulous.conversion import ConversionError
 from codemeticulous.models import Affiliation, Agent, Contribution, Identifier, License, RelatedResource, SoftwareMetadata
@@ -9,6 +11,18 @@ from codemeticulous.models import Affiliation, Agent, Contribution, Identifier, 
 
 def person(name: str = "Ada Lovelace") -> Agent:
     return Agent(kind="person", name=name, given_names=["Ada"], family_names=["Lovelace"])
+
+
+def test_public_identifier_names_preserve_generated_validation() -> None:
+    assert DoiIdentifier(type="doi", value="10.1234/demo").type == "doi"
+    assert str(UrlIdentifier(type="url", value="https://example.com/id").value) == "https://example.com/id"
+    assert SwhIdentifier(
+        type="swh", value="swh:1:rev:0000000000000000000000000000000000000000"
+    ).type == "swh"
+    assert OtherIdentifier(type="other", value="local-id").value == "local-id"
+
+    with pytest.raises(ValidationError):
+        DoiIdentifier(type="doi", value="not-a-doi")
 
 
 def test_maps_neutral_fields_and_repository_precedence() -> None:
