@@ -1,8 +1,8 @@
 import pytest
 from pathlib import Path
-from pydantic.v1 import ValidationError
+from pydantic import ValidationError
 
-from .conftest import STANDARDS, discover_test_files
+from .conftest import VALIDATION_MODELS, discover_test_files
 
 
 def pytest_generate_tests(metafunc):
@@ -10,7 +10,7 @@ def pytest_generate_tests(metafunc):
         test_cases = []
         test_ids = []
         test_data_dir = Path(__file__).parent / "data"
-        for model_name in STANDARDS.keys():
+        for model_name in VALIDATION_MODELS.keys():
             invalid_files = discover_test_files(test_data_dir, model_name, "invalid")
             for file_path in invalid_files:
                 test_cases.append((model_name, file_path))
@@ -21,5 +21,5 @@ def pytest_generate_tests(metafunc):
 def test_invalid(invalid_test_case, load_model_data):
     model_name, file_path = invalid_test_case
     model_class, data, _ = load_model_data(model_name, file_path)
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         model_class(**data)

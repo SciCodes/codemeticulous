@@ -1,62 +1,68 @@
-from codemeticulous.codemeta.models import CodeMeta
-from codemeticulous.datacite.models import DataCite
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
+from pydantic import BaseModel, ValidationError
+
+from codemeticulous.cff.convert import software_metadata_to_cff
 from codemeticulous.cff.models import CitationFileFormat
-from codemeticulous.codemeta.convert import canonical_to_codemeta, codemeta_to_canonical
-from codemeticulous.datacite.convert import canonical_to_datacite, datacite_to_canonical
-from codemeticulous.cff.convert import canonical_to_cff, cff_to_canonical
+from codemeticulous.codemeta.convert import (
+    codemeta_to_software_metadata,
+    software_metadata_to_codemeta,
+)
+from codemeticulous.codemeta.models import CodeMetaV3
+from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
+from codemeticulous.datacite.convert import software_metadata_to_datacite
+from codemeticulous.datacite.models import DataCite
+from codemeticulous.models import SoftwareMetadata
 
 
-STANDARDS = {
-    "codemeta": {
-        "model": CodeMeta,
-        "format": "json",
-        "to_canonical": codemeta_to_canonical,
-        "from_canonical": canonical_to_codemeta,
-    },
-    "datacite": {
-        "model": DataCite,
-        "format": "json",
-        "to_canonical": datacite_to_canonical,
-        "from_canonical": canonical_to_datacite,
-    },
-    "cff": {
-        "model": CitationFileFormat,
-        "format": "yaml",
-        "to_canonical": cff_to_canonical,
-        "from_canonical": canonical_to_cff,
-    },
+VALIDATION_MODELS: dict[str, type[BaseModel]] = {
+    "codemeta": CodeMetaV3,
+    "cff": CitationFileFormat,
+    "datacite": DataCite,
 }
+TARGETS = ("software-metadata", "codemeta", "cff", "datacite")
 
 
-def to_canonical(source_format: str, source_data):
-    source_model = STANDARDS[source_format]["model"]
-    if isinstance(source_data, dict):
-        source_instance = source_model(**source_data)
-    elif isinstance(source_data, source_model):
-        source_instance = source_data
+def convert(
+    source_format: str,
+    target_format: str,
+    source_data: Mapping[str, object] | CodeMetaV3,
+) -> ConversionResult[BaseModel]:
+    if source_format != "codemeta":
+        raise ConversionError(f"Unsupported source format: {source_format}")
+    if target_format not in TARGETS:
+        raise ConversionError(f"Unsupported target format: {target_format}")
 
-    source_to_canonical = STANDARDS[source_format]["to_canonical"]
-    canonical_instance = source_to_canonical(source_instance)
+    try:
+        source = (
+            CodeMetaV3.model_validate(dict(source_data))
+            if isinstance(source_data, Mapping)
+            else source_data
+        )
+        if not isinstance(source, CodeMetaV3):
+            raise ConversionError(
+                "codemeta source data must be a mapping or CodeMetaV3"
+            )
+    except ValidationError as exc:
+        raise ConversionError(f"Invalid codemeta source: {exc}") from exc
 
-    return canonical_instance
+    canonical = codemeta_to_software_metadata(source)
+    if target_format == "software-metadata":
+        return ConversionResult(value=canonical.value, issues=canonical.issues)
+
+    if target_format == "codemeta":
+        outbound = software_metadata_to_codemeta(canonical.value)
+    elif target_format == "cff":
+        outbound = software_metadata_to_cff(canonical.value)
+    else:
+        outbound = software_metadata_to_datacite(canonical.value)
+    return ConversionResult(
+        value=outbound.value,
+        issues=tuple(canonical.issues) + tuple(outbound.issues),
+    )
 
 
-def from_canonical(target_format: str, canonical_instance, **custom_fields):
-    canonical_to_target = STANDARDS[target_format]["from_canonical"]
-    target_instance = canonical_to_target(canonical_instance, **custom_fields)
-
-    return target_instance
-
-
-def convert(source_format: str, target_format: str, source_data, **custom_fields):
-    """
-    Convert from one metadata standard to another, through the canonical representation.
-
-    Args:
-    - source_format: string representation of the source metadata standard. Currently supported: "codemeta"
-    - target_format: string representation of the target metadata standard. Currently supported: "codemeta", "datacite", "cff"
-    - source_data: dict or pydantic.BaseModel instance representing the source metadata
-    - custom_fields: additional fields to add to the target metadata instance
-    """
-    canonical_instance = to_canonical(source_format, source_data)
-    return from_canonical(target_format, canonical_instance, **custom_fields)
+__all__ = ["TARGETS", "VALIDATION_MODELS", "convert"]

@@ -1,46 +1,78 @@
-from pathlib import Path
+import pytest
+from pydantic_codemeta import CodeMetaV3
 
 from codemeticulous.convert import convert
-from .conftest import discover_test_files
-
-CONVERSION_MAP = {
-    "codemeta": {
-        "cff": [
-            # cff requires authors
-            "codemetar.json",
-            "context.json",
-            "creator.json",
-        ],
-        "datacite": [
-            # datacite metadata requires creators, title, publisher, publication year
-            "chime.json",
-        ],
-    }
-}
+from codemeticulous.conversion import ConversionError
+from codemeticulous import convert as public_convert
+from codemeticulous.cff.models import CitationFileFormat
+from codemeticulous.datacite.models import DataCite
+from codemeticulous.models import SoftwareMetadata
 
 
-def pytest_generate_tests(metafunc):
-    if "conversion_test_case" in metafunc.fixturenames:
-        test_cases = []
-        test_ids = []
-        test_data_dir = Path(__file__).parent / "data"
-
-        for source_name, target_maps in CONVERSION_MAP.items():
-            for subdir in ["valid", "clean"]:
-                input_files = discover_test_files(test_data_dir, source_name, subdir)
-                for target_name, convertible_files in target_maps.items():
-                    for file_path in input_files:
-                        if not convertible_files or file_path.name in convertible_files:
-                            test_cases.append((source_name, target_name, file_path))
-                            test_ids.append(
-                                f"convert {source_name} -> {target_name} ({file_path.name})"
-                            )
-        metafunc.parametrize("conversion_test_case", test_cases, ids=test_ids)
+def test_top_level_convert_is_callable() -> None:
+    assert public_convert is convert
 
 
-def test_conversion(conversion_test_case, load_model_data):
-    source_name, target_name, file_path = conversion_test_case
-    source_class, data, _ = load_model_data(source_name, file_path)
-    source_instance = source_class(**data)
-    # should succeed
-    convert(source_name, target_name, source_instance)
+def test_convert_returns_software_metadata_with_issues() -> None:
+    result = convert(
+        "codemeta",
+        "software-metadata",
+        {"@type": "SoftwareSourceCode", "name": "Tool", "author": "Unknown author"},
+    )
+
+    assert result.value.title == "Tool"
+    assert result.issues[0].path == "author[0]"
+
+
+def test_convert_aggregates_input_and_output_issues() -> None:
+    result = convert(
+        "codemeta",
+        "datacite",
+        {
+            "@type": "SoftwareSourceCode",
+            "name": "Tool",
+            "author": "Unknown author",
+            "publisher": {"@type": "Organization", "name": "Press"},
+            "datePublished": "2024-01-01",
+            "downloadUrl": "https://example.org/download",
+        },
+    )
+
+    assert result.value.publicationYear == "2024"
+    assert [issue.path for issue in result.issues] == [
+        "author[0]",
+        "download_url",
+        "creators[0].kind",
+    ]
+
+
+def test_convert_rejects_unsupported_directions() -> None:
+    with pytest.raises(ConversionError):
+        convert("datacite", "software-metadata", {})
+    with pytest.raises(ConversionError):
+        convert("codemeta", "unknown", {})
+
+
+@pytest.mark.parametrize(
+    ("target", "expected_type"),
+    [
+        ("software-metadata", SoftwareMetadata),
+        ("codemeta", CodeMetaV3),
+        ("cff", CitationFileFormat),
+        ("datacite", DataCite),
+    ],
+)
+def test_convert_supports_each_target(target: str, expected_type: type) -> None:
+    result = convert(
+        "codemeta",
+        target,
+        {
+            "@type": "SoftwareSourceCode",
+            "name": "Tool",
+            "author": {"@type": "Person", "name": "Ada"},
+            "publisher": {"@type": "Organization", "name": "Press"},
+            "datePublished": "2024-01-01",
+        },
+    )
+
+    assert isinstance(result.value, expected_type)

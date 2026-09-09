@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from .conftest import STANDARDS, discover_test_files
+from .conftest import VALIDATION_MODELS, discover_test_files
 
 
 def pytest_generate_tests(metafunc):
@@ -11,7 +11,7 @@ def pytest_generate_tests(metafunc):
         test_cases = []
         test_ids = []
         test_data_dir = Path(__file__).parent / "data"
-        for model_name in STANDARDS.keys():
+        for model_name in VALIDATION_MODELS.keys():
             valid_files = discover_test_files(test_data_dir, model_name, "valid")
             for file_path in valid_files:
                 test_cases.append((model_name, file_path))
@@ -25,7 +25,9 @@ def test_valid(valid_test_case, load_model_data):
     model_instance = model_class(**data)
     # if the file type was json, compare with the json representation
     if file_type == "json":
-        serialized_data = json.loads(model_instance.json())
+        serialized_data = json.loads(
+            model_instance.model_dump_json(by_alias=True, exclude_none=True)
+        )
     # if the file type was yaml, compare with the yaml representation,
     # mostly for the yaml dates
     elif file_type == "yaml":
