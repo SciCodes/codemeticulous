@@ -25,7 +25,9 @@ def test_valid(valid_test_case, load_model_data):
     model_instance = model_class(**data)
     # if the file type was json, compare with the json representation
     if file_type == "json":
-        serialized_data = json.loads(model_instance.json())
+        serialized_data = json.loads(
+            model_instance.model_dump_json(by_alias=True, exclude_none=True)
+        )
     # if the file type was yaml, compare with the yaml representation,
     # mostly for the yaml dates
     elif file_type == "yaml":

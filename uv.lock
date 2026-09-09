@@ -298,7 +298,7 @@ email = [
 [[package]]
 name = "pydantic-codemeta"
 version = "0.1.0"
-source = { git = "https://github.com/SciCodes/pydantic-codemeta.git#dabd88b3fa17356ff281d1bd132fa85abc6fe0c9" }
+source = { git = "https://github.com/SciCodes/pydantic-codemeta.git#bb263d33204f4ab153bbc72247fd42d51f3cc2fb" }
 dependencies = [
     { name = "pydantic" },
     { name = "typing-extensions" },
