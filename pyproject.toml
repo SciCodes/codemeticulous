@@ -31,6 +31,3 @@ include-package-data = false
 [tool.setuptools.packages.find]
 include = ["codemeticulous", "codemeticulous.*"]
 exclude = ["tests*", "schema"]
-
-[tool.uv.sources]
-pydantic-codemeta = { git = "https://github.com/SciCodes/pydantic-codemeta.git" }

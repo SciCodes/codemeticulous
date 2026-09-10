@@ -84,7 +84,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.1.7" },
     { name = "pydantic", specifier = ">=2.9.2,<3" },
-    { name = "pydantic-codemeta", git = "https://github.com/SciCodes/pydantic-codemeta.git" },
+    { name = "pydantic-codemeta", specifier = ">=0.1.0,<0.2" },
     { name = "pyyaml", specifier = ">=6.0.2" },
 ]
 
@@ -292,16 +292,20 @@ wheels = [
 
 [package.optional-dependencies]
 email = [
-    { name = "email-validator" },
+    { name = "email-validator", marker = "python_full_version < '4.0'" },
 ]
 
 [[package]]
 name = "pydantic-codemeta"
 version = "0.1.0"
-source = { git = "https://github.com/SciCodes/pydantic-codemeta.git#bb263d33204f4ab153bbc72247fd42d51f3cc2fb" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/68/bf/f45499d9ae153b50b49c5d434ed8690a96e6c1855fc7c3d916a3af1a067c/pydantic_codemeta-0.1.0.tar.gz", hash = "sha256:7af6a78a60fe204473499456ff46d40815088c1a4b5fdc2a7e1e97df7d560f9d", size = 20382, upload-time = "2026-09-10T00:22:09.292Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2e/71/17d892ac0daa0b9bc30c841120faa80245937172172e23c962863b8d4b27/pydantic_codemeta-0.1.0-py3-none-any.whl", hash = "sha256:64e95cbd05449ef53e099081b181a0b9f7c3d792dc0f87a194e93262ee743fd8", size = 11476, upload-time = "2026-09-10T00:22:08.049Z" },
 ]
 
 [[package]]
