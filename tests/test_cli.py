@@ -6,7 +6,7 @@ from codemeticulous.cli import cli
 
 
 def test_cli_convert_prints_document_and_loss_diagnostics() -> None:
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     with runner.isolated_filesystem():
         with open("input.json", "w", encoding="utf-8") as file:
             json.dump(
@@ -33,7 +33,7 @@ def test_cli_convert_prints_document_and_loss_diagnostics() -> None:
 
 
 def test_cli_validate_is_independent_of_conversion_targets() -> None:
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     with runner.isolated_filesystem():
         with open("input.json", "w", encoding="utf-8") as file:
             json.dump({"@type": "SoftwareSourceCode", "name": "Tool"}, file)
@@ -45,7 +45,7 @@ def test_cli_validate_is_independent_of_conversion_targets() -> None:
 
 
 def test_cli_convert_failure_is_nonzero() -> None:
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     with runner.isolated_filesystem():
         with open("input.json", "w", encoding="utf-8") as file:
             json.dump({"@type": "SoftwareSourceCode"}, file)
@@ -67,7 +67,7 @@ def test_cli_convert_failure_is_nonzero() -> None:
 
 
 def test_cli_validation_failure_is_nonzero() -> None:
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
     with runner.isolated_filesystem():
         with open("input.json", "w", encoding="utf-8") as file:
             json.dump({"@type": "SoftwareSourceCode"}, file)
