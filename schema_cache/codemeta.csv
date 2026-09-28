@@ -1,0 +1,65 @@
+field,type,description
+@context,Text,the JSON-LD context URI for CodeMeta v3 (always "https://w3id.org/codemeta/3.0")
+@type,Text,the schema.org type of the resource (either "SoftwareSourceCode" or "SoftwareApplication")
+@id,URL,a unique URI identifying the software
+name,Text,the name of the software
+codeRepository,URL,link to the repository where the un-compiled un-packaged source code and related code is available
+programmingLanguage,schema:ComputerLanguage or Text or list[schema:ComputerLanguage or Text],the computer programming language
+runtimePlatform,Text or list[Text],runtime platform or script interpreter dependencies
+targetProduct,schema:SoftwareApplication or Text or list[schema:SoftwareApplication or Text],target operating system or product to which the code applies
+applicationCategory,Text or URL or list[Text or URL],type of software application e.g. Game or Multimedia
+applicationSubCategory,Text or URL or list[Text or URL],subcategory of the application e.g. Arcade Game
+downloadUrl,URL or list[URL],link to downloadable binary
+fileSize,Text,size of the application or package
+installUrl,URL or list[URL],URL at which the app may be installed from
+memoryRequirements,Text or URL or list[Text or URL],minimum memory requirements
+operatingSystem,Text or list[Text],operating systems supported
+permissions,Text or list[Text],permission(s) required by the application
+processorRequirements,Text or list[Text],processor architecture required to run the application
+releaseNotes,Text or URL or list[Text or URL],description of what changed in this version
+softwareHelp,schema:CreativeWork or URL or list[schema:CreativeWork or URL],software application help
+softwareRequirements,schema:SoftwareSourceCode or schema:SoftwareApplication or Text or URL or list[schema:SoftwareSourceCode or schema:SoftwareApplication or Text or URL],required software dependencies
+softwareVersion,Text,version of the software instance
+storageRequirements,Text or URL or list[Text or URL],storage requirements
+supportingData,schema:DataFeed or list[schema:DataFeed],supporting data for a SoftwareApplication
+author,schema:Role or schema:Person or schema:Organization or list[schema:Role or schema:Person or schema:Organization],the creator/author of this CreativeWork
+citation,schema:CreativeWork or URL or list[schema:CreativeWork or URL],a citation or reference to another creative work
+contributor,schema:Role or schema:Person or schema:Organization or list[schema:Role or schema:Person or schema:Organization],a secondary contributor to the CreativeWork
+copyrightHolder,schema:Role or schema:Person or schema:Organization or list[schema:Role or schema:Person or schema:Organization],the party holding the legal copyright to the CreativeWork
+copyrightYear,Integer or list[Integer],the year during which the claimed copyright was first asserted
+dateCreated,Date or DateTime,the date on which the CreativeWork was created
+dateModified,Date or DateTime,the date on which the CreativeWork was most recently modified
+datePublished,Date or DateTime,date of first broadcast/publication
+editor,schema:Person or list[schema:Person],specifies the person who edited the CreativeWork
+encoding,schema:MediaObject or list[schema:MediaObject],a media object that encodes this CreativeWork
+fileFormat,Text or URL or list[Text or URL],media type typically expressed using a MIME format
+funder,schema:Role or schema:Person or schema:Organization or list[schema:Role or schema:Person or schema:Organization],a person or organization that supports a thing through a pledge or financial contribution
+keywords,Text or list[Text],keywords or tags used to describe the content
+license,schema:CreativeWork or URL or list[schema:CreativeWork or URL],a license document that applies to the content
+producer,schema:Role or schema:Person or schema:Organization or list[schema:Role or schema:Person or schema:Organization],the person or organization who produced the work
+provider,schema:Role or schema:Person or schema:Organization or list[schema:Role or schema:Person or schema:Organization],the service provider or administrator of the work
+publisher,schema:Role or schema:Person or schema:Organization or Text or list[schema:Role or schema:Person or schema:Organization or Text],the publisher of the creative work
+sponsor,schema:Role or schema:Person or schema:Organization or list[schema:Role or schema:Person or schema:Organization],a person or organization that supports a thing through a pledge or promise
+version,Integer or Float or Text or list[Integer or Float or Text],the version of the CreativeWork
+isAccessibleForFree,Boolean,a flag to signal that the item is accessible for free
+isPartOf,schema:CreativeWork or URL or list[schema:CreativeWork or URL],indicates an item that this item is part of
+hasPart,schema:CreativeWork or URL or list[schema:CreativeWork or URL],indicates an item that is part of this item
+position,Integer or Text or list[Integer or Text],the position of an item in a series or sequence
+identifier,schema:PropertyValue or Text or URL or list[schema:PropertyValue or Text or URL],unique identifier such as ISBN or UUID or DOI
+description,Text,a description of the item
+sameAs,URL or list[URL],URL of a reference web page that unambiguously indicates the item's identity
+url,URL or list[URL],URL of the item
+relatedLink,URL or list[URL],a link related to this object
+review,schema:Review,a review of the item
+hasSourceCode,schema:SoftwareSourceCode or schema:SoftwareApplication or Text or URL or list[schema:SoftwareSourceCode or schema:SoftwareApplication or Text or URL],link to the repository where the un-compiled un-packaged source code and related code is available
+isSourceCodeOf,schema:SoftwareApplication or Text or URL or list[schema:SoftwareApplication or Text or URL],link to the compiled or packaged software application built from this source code
+softwareSuggestions,schema:SoftwareSourceCode or schema:SoftwareApplication or Text or URL or list[schema:SoftwareSourceCode or schema:SoftwareApplication or Text or URL],optional dependencies
+maintainer,schema:Role or schema:Person or schema:Organization or list[schema:Role or schema:Person or schema:Organization],individual responsible for maintaining the software
+continuousIntegration,URL or list[URL],link to continuous integration service
+buildInstructions,URL or list[URL],link to installation instructions or documentation
+developmentStatus,Text,description of development status e.g. Active or Inactive or Suspended (see repostatus.org)
+embargoEndDate,Date or DateTime,software may be embargoed from public access until a specified date
+funding,Text or list[Text],information about financial support for development of the software
+issueTracker,URL or list[URL],link to software bug tracking system
+referencePublication,schema:ScholarlyArticle or Text or URL or list[schema:ScholarlyArticle or Text or URL],an academic publication related to the software
+readme,URL or list[URL],link to software Readme file
