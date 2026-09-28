@@ -1,102 +1,69 @@
-import re
+"""Generate and load compact schema descriptions for AI prompts."""
+
+from __future__ import annotations
+
 import csv
 import json
-import logging
-import litellm
+import re
 from pathlib import Path
-from codemeticulous.standards import STANDARDS
+
+from codemeticulous.convert import VALIDATION_MODELS
+
+CACHE_DIR = Path(__file__).parent.parent / "schema_cache"
 
 
-def llm_descriptions(model_name: str, data, llm_model: str) -> str:
-    prompt = f"""
-    For a Pydantic model '{model_name}', we have a list of lists, each containing a field and their field type. 
+def llm_descriptions(
+    model_name: str, fields: list[list[str]], llm_model: str
+) -> list[list[str]]:
+    import litellm
 
-    Please provide:
-    1. A more intuitive, human-readable type for each field (e.g., convert "typing.Optional[str]" to "Text", "typing.List[str]" to "List of Text", URLs to "URL", dates to "Date", etc.)
-    2. A brief 1-2 sentence description of each field in relation to the model
-
-    When determining intuitive types and descriptions:
-    - For example with CodeMeta, reference Schema.org vocabulary where applicable (e.g., use Schema.org terms like "Text", "URL", "Date", "Person", "Organization")
-    - Simplify Python typing syntax to be more readable (Optional means the field can be null, List means multiple values)
-    - Use semantic type names that reflect the meaning rather than the implementation to be more intuitive.
-
-    Your response should be a valid JSON array where each element is a list containing: [field_name, intuitive_type, description].
-    Do not include outside explanatory text or formatting syntax so your response can be piped into 'json.loads()'.
-
-    Here is the data:
-    {data}
-    """
-
-    try:
-        response = litellm.completion(
-            messages=[{"role": "user", "content": prompt}],
-            model=llm_model
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        print(f"ERROR: structured output failed: {e}") 
-        raise
-
-# TODO: move toggle to use defined schema json files here
-def generate_schemas(llm_model: str):
-    # iterate through all schemas in STANDARDS and create csv files to cache
-    for format, info in STANDARDS.items():
-        pydantic_model = info["model"]
-        cache_directory = Path(__file__).parent.parent / "schema_cache"
-        file = cache_directory / f"{format}.csv"
-
-        if file.exists():
-            continue
-
-        fields = []
-
-        for field_name, model_field in pydantic_model.__fields__.items():
-            field_type = model_field.annotation
-            field = [field_name, field_type]
-            fields.append(field)
-
-        llm_response = llm_descriptions(pydantic_model.__name__, fields, llm_model)
-        match = re.search(r'\{.*\}|\[.*\]', llm_response, re.DOTALL) # clean up LLM response
-
-        if match:
-            llm_response = match.group(0)
-
-        try:
-            field_descriptions = json.loads(llm_response)
-
-            # generate a csv retaining the final schema information and store to reuse
-            with open(file, "w", newline='') as f:
-                writer = csv.writer(f)
-                writer.writerow(["Field", "Type", "Description"])
-                writer.writerows(field_descriptions)
-        except Exception as e:
-            logging.exception(f"ERROR: failed to create list from llm response: ", e)  
-            raise             
+    prompt = (
+        f"Describe each field of the {model_name} Pydantic model. "
+        "Return only a JSON array of [field_name, intuitive_type, brief_description] arrays, "
+        "in the same order. Use plain names such as Text, URL, Date, and Person.\n"
+        f"Fields: {json.dumps(fields)}"
+    )
+    response = litellm.completion(
+        model=llm_model, messages=[{"role": "user", "content": prompt}]
+    )
+    content = response.choices[0].message.content
+    if not isinstance(content, str):
+        raise ValueError("LLM response has no text content")
+    text = content.strip()
+    fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL)
+    rows = json.loads(fenced.group(1) if fenced else text)
+    if not isinstance(rows, list) or any(
+        not isinstance(row, list) or len(row) != 3 for row in rows
+    ):
+        raise ValueError("LLM response must contain three values per schema field")
+    return rows
 
 
-def check_schema(model: str, flag: bool = False): 
-    schema_file = STANDARDS[model]["schema"]
+def generate_schemas(llm_model: str) -> None:
+    """Refresh cached schema descriptions for each supported format."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    for format_name, model in VALIDATION_MODELS.items():
+        fields = [
+            [name, str(field.annotation)] for name, field in model.model_fields.items()
+        ]
+        rows = llm_descriptions(model.__name__, fields, llm_model)
+        with (CACHE_DIR / f"{format_name}.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as file:
+            writer = csv.writer(file)
+            writer.writerow(["Field", "Type", "Description"])
+            writer.writerows(rows)
 
-    if flag and schema_file is not None: # iterate through fields if there's an instance that calls for the schema to be pruned
-        with open(schema_file, 'r') as f:
-            schema = json.load(f)
-        
-        return schema
-    
-    else: # check for schema_cache directory, return the data file if its exists
-        cache_directory = Path(__file__).parent.parent / "schema_cache"
-        file = cache_directory / f"{model}.csv"
 
-        if file.exists():
-            with open(file, 'r') as f:
-                reader = csv.DictReader(f)
-                fields = [dict(row) for row in reader]
-
-            return {
-                "model_name": model,
-                "fields": fields
-            }
-            
-        else: # if it doesn't exist, use LLM to generate a csv of schema information
-            logging.info("ERROR: schemas were not generated yet, call uv run codemeticulous generate-schemas.")
-            raise
+def check_schema(format_name: str) -> dict[str, object]:
+    """Load the descriptions included with the project."""
+    if format_name not in VALIDATION_MODELS:
+        raise ValueError(f"Unsupported format: {format_name}")
+    path = CACHE_DIR / f"{format_name}.csv"
+    if not path.exists():
+        return VALIDATION_MODELS[format_name].model_json_schema(by_alias=True)
+    with path.open(newline="", encoding="utf-8") as file:
+        fields = [
+            row for row in csv.DictReader(file) if row.get("Field") or row.get("field")
+        ]
+    return {"model_name": format_name, "fields": fields}
