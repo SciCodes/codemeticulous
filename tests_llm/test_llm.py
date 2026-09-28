@@ -142,8 +142,8 @@ def test_ai_convert(test_case, llm_model, run_log, tmp_path):
 
     assert llm_result is not None, "LLM conversion returned None"
 
-    baseline_dict = baseline.dict(serialize=True)
-    ai_dict = llm_result.dict(serialize=True)
+    baseline_dict = baseline.value.model_dump(by_alias=True, exclude_none=True)
+    ai_dict = llm_result.model_dump(by_alias=True, exclude_none=True)
 
     violations = fields_are_superset(baseline_dict, ai_dict)
 

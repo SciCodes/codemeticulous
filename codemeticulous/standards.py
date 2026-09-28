@@ -1,30 +1,23 @@
-from codemeticulous.codemeta.models import CodeMeta
-from codemeticulous.datacite.models import DataCite
+"""Models and serialization formats supported by experimental AI conversion."""
+
 from codemeticulous.cff.models import CitationFileFormat
-from codemeticulous.codemeta.convert import canonical_to_codemeta, codemeta_to_canonical
-from codemeticulous.datacite.convert import canonical_to_datacite, datacite_to_canonical
-from codemeticulous.cff.convert import canonical_to_cff, cff_to_canonical
+from codemeticulous.codemeta.models import CodeMetaV3
+from codemeticulous.datacite.models import DataCite
 
 STANDARDS = {
     "codemeta": {
-        "model": CodeMeta,
+        "model": CodeMetaV3,
         "format": "json",
-        "to_canonical": codemeta_to_canonical,
-        "from_canonical": canonical_to_codemeta,
-        "schema": None
+        "schema": None,
     },
     "datacite": {
         "model": DataCite,
         "format": "json",
-        "to_canonical": datacite_to_canonical,
-        "from_canonical": canonical_to_datacite,
-        "schema": "schema/datacite/schema46.json"
+        "schema": "schema/datacite/schema46.json",
     },
     "cff": {
         "model": CitationFileFormat,
         "format": "yaml",
-        "to_canonical": cff_to_canonical,
-        "from_canonical": canonical_to_cff,
-        "schema": "schema/cff/1.2.0/schema.json"
+        "schema": "schema/cff/1.2.0/schema.json",
     },
 }

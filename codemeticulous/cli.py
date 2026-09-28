@@ -6,6 +6,7 @@ import traceback
 
 import click
 import yaml
+from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 
 from codemeticulous.convert import (
@@ -20,7 +21,7 @@ from codemeticulous.generate_schemas import generate_schemas as _generate_schema
 
 @click.group()
 def cli() -> None:
-    pass
+    load_dotenv()
 
 
 @cli.command(name="convert")
@@ -105,17 +106,33 @@ def load_file_autodetect(file_path: str):
 
 @cli.command()
 @click.option("-m", "--model", "llm_model", required=True, help="LLM model to use")
-@click.option("-f", "--from", "source_format", type=click.Choice(tuple(VALIDATION_MODELS)), required=True)
-@click.option("-t", "--to", "target_format", type=click.Choice(tuple(VALIDATION_MODELS)), required=True)
+@click.option(
+    "-f",
+    "--from",
+    "source_format",
+    type=click.Choice(tuple(VALIDATION_MODELS)),
+    required=True,
+)
+@click.option(
+    "-t",
+    "--to",
+    "target_format",
+    type=click.Choice(tuple(VALIDATION_MODELS)),
+    required=True,
+)
 @click.option("-o", "--output", "output_file", type=click.File("w"), default=None)
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @click.argument("input_file", type=click.Path(exists=True))
-def ai_convert(llm_model, source_format, target_format, input_file, output_file, verbose):
+def ai_convert(
+    llm_model, source_format, target_format, input_file, output_file, verbose
+):
     try:
         input_data = load_file_autodetect(input_file)
-        converted_data, _ = _convert_ai(llm_model, source_format, target_format, input_data)
+        converted_data, _ = _convert_ai(
+            llm_model, source_format, target_format, input_data
+        )
         output_data = dump_data(converted_data, target_format)
-    except (OSError, ValueError, ValidationError) as exc:
+    except Exception as exc:
         if verbose:
             traceback.print_exc()
         raise click.ClickException(str(exc)) from exc
