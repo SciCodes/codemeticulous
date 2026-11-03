@@ -97,15 +97,33 @@ and supports format-specific validation for CodeMeta, CFF, and DataCite.
 
 ## Agent skill
 
-[`.agents/skills/research-software-metadata`]
-teaches an agent to resolve a research software identifier, collect and
-reconcile source metadata with field-level provenance, select a supported
+`research-software-metadata` skill teaches an agent to resolve a
+research software identifier, collect and reconcile source metadata with
+field-level provenance, select a supported
 metadata adapter, invoke the versioned library interface, validate the result,
 and report conflicts or missing data without fabrication. CodeMeta JSON,
 Citation File Format, and DataCite XML are the initial adapters rather than the
-boundary of the skill. Agent-level evaluation scenarios live beside the skill:
-deterministic cases use recorded fixtures, while explicitly marked live cases
-resolve real repository URLs and DOIs with network access.
+boundary of the skill.
+
+Install the skill by running the command from anywhere inside the project with codemeticulous installed:
+
+```bash
+uv run codemeticulous skill install research-software-metadata
+```
+
+The command discovers the repository root with Git and installs the skill at
+`.agents/skills/research-software-metadata`.
+
+```bash
+uv run codemeticulous skill install research-software-metadata --agent
+```
+
+| Coding agent | CLI option | Skill directory |
+| --- | --- | --- |
+| Codex | `--agent codex` (default) | `.agents/skills` |
+| GitHub Copilot | `--agent copilot` | `.agents/skills` |
+| Claude Code | `--agent claude` | `.claude/skills` |
+| All supported agents | `--agent all` | `.agents/skills` and `.claude/skills` |
 
 ## Tests
 

@@ -12,6 +12,7 @@ from codemeticulous.conversion import ConversionError
 from codemeticulous.formats import FORMAT_ALIASES, SUPPORTED_VERSIONS
 from codemeticulous.serialization import serialize
 from codemeticulous.validation import validate_file
+from codemeticulous.skills import SKILL_NAMES, install_skill
 
 SOURCE_FORMATS = (
     "collected-software-metadata",
@@ -103,6 +104,44 @@ def validate_command(
         if verbose:
             traceback.print_exc()
         raise click.ClickException(str(exc)) from exc
+
+
+@cli.group(name="skill")
+def skill_group() -> None:
+    """Manage agent skills bundled with codemeticulous."""
+
+
+@skill_group.command(name="install")
+@click.argument("name", type=click.Choice(SKILL_NAMES))
+@click.option(
+    "--agent",
+    type=click.Choice(("codex", "copilot", "claude", "all")),
+    default="codex",
+    show_default=True,
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    help="Replace an existing installed copy.",
+)
+def install_skill_command(
+    name: str,
+    agent: str,
+    force: bool,
+) -> None:
+    """Install a bundled skill into the current Git repository."""
+
+    try:
+        destinations = install_skill(
+            name=name,
+            agent=agent,
+            force=force,
+        )
+    except (FileExistsError, OSError, ValueError) as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    for destination in destinations:
+        click.echo(f"Installed {name} to {destination}")
 
 
 def load_file_autodetect(file_path: str):

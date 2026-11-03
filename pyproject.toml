@@ -19,8 +19,6 @@ codemeticulous = "codemeticulous.cli:cli"
 dev = [
     "black>=24.8.0",
     "datamodel-code-generator>=0.26.2",
-    "inspect-ai>=0.3.285,<0.4",
-    "openai>=3.41.0",
     "pytest>=8.3.3",
 ]
 
@@ -42,4 +40,8 @@ schema = [
     "*/*/*.json",
     "*/*/*.xsd",
     "*/*/*/*.xsd",
+]
+"codemeticulous.skills" = [
+    "research-software-metadata/SKILL.md",
+    "research-software-metadata/references/*.md",
 ]

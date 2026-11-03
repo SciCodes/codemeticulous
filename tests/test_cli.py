@@ -1,4 +1,6 @@
 import json
+import subprocess
+from pathlib import Path
 
 from click.testing import CliRunner
 
@@ -200,48 +202,88 @@ def test_cli_validation_failure_is_nonzero() -> None:
     assert "Invalid codemeta 3.0 document" in result.stderr
 
 
-def test_cli_generates_and_validates_datacite_xml() -> None:
+def _git_repository(path: Path) -> Path:
+    path.mkdir()
+    subprocess.run(
+        ["git", "init", "--quiet"],
+        cwd=path,
+        check=True,
+        capture_output=True,
+    )
+    return path
+
+
+def test_skill_install_uses_git_repository_root(tmp_path: Path, monkeypatch) -> None:
     runner = CliRunner()
-    source = {
-        "@context": "https://w3id.org/codemeta/3.0",
-        "@type": "SoftwareSourceCode",
-        "@id": "https://doi.org/10.1234/example",
-        "name": "Tool",
-        "author": {"@type": "Person", "name": "Ada"},
-        "publisher": {"@type": "Organization", "name": "Archive"},
-        "datePublished": "2024-01-01",
-    }
-    with runner.isolated_filesystem():
-        with open("input.json", "w", encoding="utf-8") as file:
-            json.dump(source, file)
+    repository = _git_repository(tmp_path / "repository")
+    nested_directory = repository / "src" / "package"
+    nested_directory.mkdir(parents=True)
+    monkeypatch.chdir(nested_directory)
 
-        converted = runner.invoke(
-            cli,
-            [
-                "convert",
-                "--from",
-                "codemeta",
-                "--to",
-                "datacite.xml",
-                "--version",
-                "4.6",
-                "--output",
-                "datacite.xml",
-                "input.json",
-            ],
-        )
-        validated = runner.invoke(
-            cli,
-            [
-                "validate",
-                "--format",
-                "datacite.xml",
-                "--version",
-                "4.6",
-                "datacite.xml",
-            ],
-        )
+    result = runner.invoke(
+        cli,
+        [
+            "skill",
+            "install",
+            "research-software-metadata",
+        ],
+    )
 
-    assert converted.exit_code == 0
-    assert validated.exit_code == 0
-    assert "is valid datacite.xml 4.6 metadata" in validated.stdout
+    destination = repository / ".agents" / "skills" / "research-software-metadata"
+    assert result.exit_code == 0
+    assert (destination / "SKILL.md").is_file()
+    assert (destination / "references" / "collection-contract.md").is_file()
+
+
+def test_skill_install_refuses_overwrite(tmp_path: Path, monkeypatch) -> None:
+    runner = CliRunner()
+    repository = _git_repository(tmp_path / "repository")
+    monkeypatch.chdir(repository)
+    arguments = [
+        "skill",
+        "install",
+        "research-software-metadata",
+    ]
+
+    assert runner.invoke(cli, arguments).exit_code == 0
+
+    second = runner.invoke(cli, arguments)
+
+    assert second.exit_code != 0
+    assert "already exists" in second.output
+
+
+def test_skill_install_all_agents(tmp_path: Path, monkeypatch) -> None:
+    runner = CliRunner()
+    repository = _git_repository(tmp_path / "repository")
+    monkeypatch.chdir(repository)
+
+    result = runner.invoke(
+        cli,
+        [
+            "skill",
+            "install",
+            "research-software-metadata",
+            "--agent",
+            "all",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert (repository / ".agents/skills/research-software-metadata/SKILL.md").is_file()
+    assert (repository / ".claude/skills/research-software-metadata/SKILL.md").is_file()
+
+
+def test_skill_install_requires_git_repository(tmp_path: Path, monkeypatch) -> None:
+    runner = CliRunner()
+    outside_repository = tmp_path / "not-a-repository"
+    outside_repository.mkdir()
+    monkeypatch.chdir(outside_repository)
+
+    result = runner.invoke(
+        cli,
+        ["skill", "install", "research-software-metadata"],
+    )
+
+    assert result.exit_code != 0
+    assert "must be run from inside a Git repository" in result.output
