@@ -31,7 +31,6 @@ from codemeticulous.cff.models import (
     Reference,
 )
 
-
 _DOI = re.compile(
     r"^(?:https?://(?:dx\.)?doi\.org/)?(10\.\d{4,9}(?:\.\d+)?/[A-Za-z0-9:/_;\-.()\[\]\\]+)$"
 )
@@ -316,6 +315,7 @@ def _convert(value: SoftwareMetadata) -> ConversionResult[CitationFileFormat]:
             _agent(agent, f"creators[{i}]", issues)
             for i, agent in enumerate(value.creators)
         ],
+        "commit": value.revision,
         "date_released": date_released,
         "doi": doi,
         "identifiers": identifiers or None,

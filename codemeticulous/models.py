@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from datetime import date
+import re
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+_EMAIL = re.compile(
+    r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@" r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$"
+)
 
 
 class _CanonicalModel(BaseModel):
@@ -29,6 +34,13 @@ class Agent(_CanonicalModel):
     url: str | None = None
     identifiers: list[Identifier] = Field(default_factory=list)
     affiliations: list[Affiliation] = Field(default_factory=list)
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str | None) -> str | None:
+        if value is not None and not _EMAIL.fullmatch(value):
+            raise ValueError("email must be a plain email address")
+        return value
 
 
 class Contribution(_CanonicalModel):
@@ -56,6 +68,7 @@ class SoftwareMetadata(_CanonicalModel):
     description: str | None = None
     publisher: Agent | None = None
     version: str | None = None
+    revision: str | None = None
     category: str | None = None
     date_released: date | str | None = None
     date_created: date | str | None = None

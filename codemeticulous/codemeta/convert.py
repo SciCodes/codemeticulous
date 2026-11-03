@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+import re
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -25,7 +26,6 @@ from codemeticulous.models import (
     RelatedResource,
     SoftwareMetadata,
 )
-
 
 RELATIONS = {
     "citation": "cites",
@@ -99,6 +99,12 @@ def _identifier(value: Any) -> Identifier | None:
             return None
         return Identifier(value=str(value.value), scheme=value.property_id)
     if isinstance(value, str):
+        candidate = value.strip()
+        if re.fullmatch(
+            r"(?i)(?:(?:https?://(?:dx\.)?doi\.org/)|doi:)?10\.\d{4,9}/\S+",
+            candidate,
+        ):
+            return Identifier(value=candidate, scheme="DOI")
         return Identifier(value=value)
     return None
 
@@ -392,7 +398,9 @@ def codemeta_to_software_metadata(
         relations=relations,
     )
     if data.id:
-        metadata.identifiers.insert(0, Identifier(value=data.id))
+        metadata.identifiers.insert(
+            0, _identifier(data.id) or Identifier(value=data.id)
+        )
     for field in UNSUPPORTED_SOURCE_FIELDS:
         if _field_value(data, field) is not None:
             issues.append(
@@ -528,6 +536,8 @@ def software_metadata_to_codemeta(
             )
     if data.repository:
         issues.append(_issue("repository", "generic repository has no CodeMeta field"))
+    if data.revision:
+        issues.append(_issue("revision", "source revision has no CodeMeta field"))
     if data.repository_artifact:
         issues.append(
             _issue("repository_artifact", "repository artifact has no CodeMeta field")

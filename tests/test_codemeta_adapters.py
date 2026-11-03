@@ -16,6 +16,25 @@ from codemeticulous.models import (
 )
 
 
+def test_doi_urls_are_typed_when_read_from_codemeta_identifiers() -> None:
+    result = codemeta_to_software_metadata(
+        CodeMetaV3.model_validate(
+            {
+                "@context": "https://w3id.org/codemeta/3.0",
+                "@type": "SoftwareSourceCode",
+                "@id": "https://doi.org/10.1234/example",
+                "name": "Tool",
+                "identifier": "doi:10.1234/alternate",
+            }
+        )
+    )
+
+    assert [(item.value, item.scheme) for item in result.value.identifiers] == [
+        ("https://doi.org/10.1234/example", "DOI"),
+        ("doi:10.1234/alternate", "DOI"),
+    ]
+
+
 def test_codemeta_to_software_metadata_maps_semantic_values() -> None:
     source = CodeMetaV3.model_validate(
         {
@@ -339,6 +358,16 @@ def test_year_only_is_not_fabricated_and_conflicts_are_reported() -> None:
         )
     )
     assert conflict.issues[0].path == "publication_year"
+
+
+def test_revision_loss_is_reported_for_codemeta() -> None:
+    result = software_metadata_to_codemeta(
+        SoftwareMetadata(title="Tool", revision="abc123")
+    )
+
+    assert [(issue.path, issue.message) for issue in result.issues] == [
+        ("revision", "source revision has no CodeMeta field")
+    ]
 
 
 def test_unsupported_relation_is_reported_per_element() -> None:

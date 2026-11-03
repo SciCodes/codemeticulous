@@ -39,7 +39,6 @@ from codemeticulous.models import (
     SoftwareMetadata,
 )
 
-
 ROLE_TYPES = {
     "contact": ContributorType.ContactPerson,
     "contact person": ContributorType.ContactPerson,
@@ -400,6 +399,8 @@ def _software_metadata_to_datacite(
     ]
     if value.repository:
         issues.append(_issue("repository", "repository is unsupported by DataCite"))
+    if value.revision:
+        issues.append(_issue("revision", "source revision is unsupported by DataCite"))
     if value.repository_code:
         issues.append(
             _issue("repository_code", "repository_code is unsupported by DataCite")

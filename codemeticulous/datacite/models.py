@@ -229,7 +229,7 @@ class RelatedIdentifierType(Enum):
     ARK = "ARK"
     arXiv = "arXiv"
     bibcode = "bibcode"
-    CTSR = "CTSR"
+    CSTR = "CSTR"
     DOI = "DOI"
     EAN13 = "EAN13"
     EISSN = "EISSN"
@@ -286,8 +286,8 @@ class RelationType(Enum):
     Requires = "Requires"
     IsObsoletedBy = "IsObsoletedBy"
     Obsoletes = "Obsoletes"
-    isTranslationOf = "isTranslationOf"
-    hasTranslation = "hasTranslation"
+    IsTranslationOf = "IsTranslationOf"
+    HasTranslation = "HasTranslation"
 
 
 class RelatedObject(BaseModel):
