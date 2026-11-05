@@ -238,8 +238,8 @@
         "Requires",
         "IsObsoletedBy",
         "Obsoletes",
-        "isTranslationOf",
-        "hasTranslation"
+        "IsTranslationOf",
+        "HasTranslation"
       ]
     },
     "relatedObject": {

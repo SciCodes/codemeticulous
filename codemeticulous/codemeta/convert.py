@@ -16,6 +16,7 @@ from pydantic_codemeta import (
 
 from codemeticulous.codemeta.models import CodeMetaV3
 from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
+from codemeticulous.identifiers import normalize_doi
 from codemeticulous.models import (
     Agent,
     Affiliation,
@@ -25,7 +26,6 @@ from codemeticulous.models import (
     RelatedResource,
     SoftwareMetadata,
 )
-
 
 RELATIONS = {
     "citation": "cites",
@@ -97,8 +97,15 @@ def _identifier(value: Any) -> Identifier | None:
     if isinstance(value, PropertyValue):
         if value.value is None:
             return None
-        return Identifier(value=str(value.value), scheme=value.property_id)
+        identifier_value = str(value.value)
+        if (value.property_id or "").lower() == "doi":
+            identifier_value = normalize_doi(identifier_value) or identifier_value
+        return Identifier(value=identifier_value, scheme=value.property_id)
     if isinstance(value, str):
+        candidate = value.strip()
+        normalized_doi = normalize_doi(candidate)
+        if normalized_doi is not None:
+            return Identifier(value=normalized_doi, scheme="DOI")
         return Identifier(value=value)
     return None
 
@@ -392,7 +399,9 @@ def codemeta_to_software_metadata(
         relations=relations,
     )
     if data.id:
-        metadata.identifiers.insert(0, Identifier(value=data.id))
+        metadata.identifiers.insert(
+            0, _identifier(data.id) or Identifier(value=data.id)
+        )
     for field in UNSUPPORTED_SOURCE_FIELDS:
         if _field_value(data, field) is not None:
             issues.append(
@@ -528,6 +537,8 @@ def software_metadata_to_codemeta(
             )
     if data.repository:
         issues.append(_issue("repository", "generic repository has no CodeMeta field"))
+    if data.revision:
+        issues.append(_issue("revision", "source revision has no CodeMeta field"))
     if data.repository_artifact:
         issues.append(
             _issue("repository_artifact", "repository artifact has no CodeMeta field")
