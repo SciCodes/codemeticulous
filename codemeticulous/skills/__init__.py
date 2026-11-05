@@ -68,6 +68,7 @@ def install_skill(
     if agent not in AGENT_DIRECTORIES:
         raise ValueError(f"Unsupported coding agent: {agent}")
 
+    bundled_skill(name)
     project = git_repository_root()
     installed: list[Path] = []
 

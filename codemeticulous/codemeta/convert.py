@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-import re
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
@@ -17,6 +16,7 @@ from pydantic_codemeta import (
 
 from codemeticulous.codemeta.models import CodeMetaV3
 from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
+from codemeticulous.identifiers import normalize_doi
 from codemeticulous.models import (
     Agent,
     Affiliation,
@@ -97,14 +97,15 @@ def _identifier(value: Any) -> Identifier | None:
     if isinstance(value, PropertyValue):
         if value.value is None:
             return None
-        return Identifier(value=str(value.value), scheme=value.property_id)
+        identifier_value = str(value.value)
+        if (value.property_id or "").lower() == "doi":
+            identifier_value = normalize_doi(identifier_value) or identifier_value
+        return Identifier(value=identifier_value, scheme=value.property_id)
     if isinstance(value, str):
         candidate = value.strip()
-        if re.fullmatch(
-            r"(?i)(?:(?:https?://(?:dx\.)?doi\.org/)|doi:)?10\.\d{4,9}/\S+",
-            candidate,
-        ):
-            return Identifier(value=candidate, scheme="DOI")
+        normalized_doi = normalize_doi(candidate)
+        if normalized_doi is not None:
+            return Identifier(value=normalized_doi, scheme="DOI")
         return Identifier(value=value)
     return None
 

@@ -18,6 +18,7 @@ from codemeticulous.datacite.models import (
     RelationType,
     ResourceTypeGeneral,
 )
+from codemeticulous.datacite.xml import to_datacite_xml
 from codemeticulous.models import (
     Affiliation,
     Agent,
@@ -292,6 +293,53 @@ def test_software_metadata_maps_to_datacite_semantically() -> None:
     assert target.rightsList[0].rights == "MIT"
     assert target.relatedIdentifiers[0].relationType is RelationType.Cites
     assert target.alternateIdentifiers[0].alternateIdentifier == "tool-1"
+
+
+def test_software_url_maps_to_datacite_xml_alternate_identifier() -> None:
+    result = software_metadata_to_datacite(
+        SoftwareMetadata(
+            title="Tool",
+            creators=[person()],
+            publisher=Agent(kind="organization", name="Press"),
+            publication_year=2024,
+            identifiers=[Identifier(value="10.1234/tool", scheme="doi")],
+            url="https://example.org/tool",
+        )
+    )
+
+    assert result.value.url is None
+    assert [
+        (item.alternateIdentifier, item.alternateIdentifierType)
+        for item in result.value.alternateIdentifiers
+    ] == [("https://example.org/tool", "URL")]
+    document = to_datacite_xml(result.value, "4.6")
+    assert (
+        '<alternateIdentifier alternateIdentifierType="URL">'
+        "https://example.org/tool</alternateIdentifier>"
+    ) in document
+    with pytest.raises(ConversionError, match="does not yet support: url"):
+        to_datacite_xml(
+            result.value.model_copy(update={"url": "https://example.org/tool"}),
+            "4.6",
+        )
+
+
+def test_invalid_software_url_reports_datacite_loss() -> None:
+    result = software_metadata_to_datacite(
+        SoftwareMetadata(
+            title="Tool",
+            creators=[person()],
+            publisher=Agent(kind="organization", name="Press"),
+            publication_year=2024,
+            identifiers=[Identifier(value="10.1234/tool", scheme="doi")],
+            url="not a URL",
+        )
+    )
+
+    assert result.value.alternateIdentifiers is None
+    assert [(issue.path, issue.message) for issue in result.issues] == [
+        ("url", "URL is not a valid DataCite alternate identifier")
+    ]
 
 
 @pytest.mark.parametrize(

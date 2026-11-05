@@ -128,7 +128,13 @@ def to_datacite_xml(value: DataCite, version: str) -> str:
         raise ConversionError("DataCite XML requires a DOI identifier")
     unsupported = [
         name
-        for name in ("relatedItems", "geoLocations", "fundingReferences", "container")
+        for name in (
+            "url",
+            "relatedItems",
+            "geoLocations",
+            "fundingReferences",
+            "container",
+        )
         if getattr(value, name) is not None
     ]
     if unsupported:

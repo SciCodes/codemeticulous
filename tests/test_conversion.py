@@ -7,9 +7,16 @@ from pydantic_codemeta import CodeMetaV3
 
 from codemeticulous import convert as public_convert
 from codemeticulous import serialize, validate_document
+from codemeticulous.cff import software_metadata_to_cff
 from codemeticulous.cff.models import CitationFileFormat
+from codemeticulous.codemeta import (
+    CodeMetaV3 as RegisteredCodeMetaV3,
+    codemeta_to_software_metadata,
+    software_metadata_to_codemeta,
+)
 from codemeticulous.convert import convert
 from codemeticulous.conversion import ConversionError
+from codemeticulous.datacite import software_metadata_to_datacite
 from codemeticulous.datacite.models import (
     DataCite,
     RelatedIdentifier,
@@ -18,6 +25,7 @@ from codemeticulous.datacite.models import (
 )
 from codemeticulous.datacite.xml import _schema_path
 from codemeticulous.models import Agent, Identifier, SoftwareMetadata
+from codemeticulous.standards import STANDARDS
 
 CODEMETA = {
     "@context": "https://w3id.org/codemeta/3.0",
@@ -39,6 +47,20 @@ CODEMETA = {
 }
 
 
+def test_standard_registry_uses_implemented_adapters() -> None:
+    assert STANDARDS["codemeta"]["model"] is RegisteredCodeMetaV3
+    assert STANDARDS["codemeta"]["to_canonical"] is codemeta_to_software_metadata
+    assert STANDARDS["codemeta"]["from_canonical"] is software_metadata_to_codemeta
+
+    assert STANDARDS["cff"]["model"] is CitationFileFormat
+    assert STANDARDS["cff"]["from_canonical"] is software_metadata_to_cff
+    assert "to_canonical" not in STANDARDS["cff"]
+
+    assert STANDARDS["datacite"]["model"] is DataCite
+    assert STANDARDS["datacite"]["from_canonical"] is software_metadata_to_datacite
+    assert "to_canonical" not in STANDARDS["datacite"]
+
+
 def test_codemeta_json_serializes_and_validates_explicit_version() -> None:
     result = convert(
         "codemeta.json",
@@ -51,6 +73,22 @@ def test_codemeta_json_serializes_and_validates_explicit_version() -> None:
     validate_document(document, "codemeta.json", "3.0")
 
     assert json.loads(document)["@context"] == "https://w3id.org/codemeta/3.0"
+
+
+def test_codemeta_doi_prefix_converts_to_valid_cff() -> None:
+    source = {
+        "@context": "https://w3id.org/codemeta/3.0",
+        "@type": "SoftwareSourceCode",
+        "name": "Example Tool",
+        "author": {"@type": "Person", "name": "Ada Lovelace"},
+        "identifier": "doi:10.1234/alternate",
+    }
+
+    result = convert("codemeta", "cff", source, target_version="1.2.0")
+    document = serialize(result.value, "cff", "1.2.0")
+    validate_document(document, "cff", "1.2.0")
+
+    assert result.value.doi == "10.1234/alternate"
 
 
 @pytest.mark.parametrize("version", ["4.5", "4.6"])

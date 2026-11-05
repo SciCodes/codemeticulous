@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-import re
 from typing import Any
-from urllib.parse import urlsplit
 
-from pydantic import ValidationError
+from pydantic import AnyUrl, TypeAdapter, ValidationError
 
 from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
+from codemeticulous.identifiers import normalize_doi
 from codemeticulous.datacite.models import (
     AffiliationItem,
     Contributor,
@@ -38,6 +37,8 @@ from codemeticulous.models import (
     RelatedResource,
     SoftwareMetadata,
 )
+
+_URL_ADAPTER = TypeAdapter(AnyUrl)
 
 ROLE_TYPES = {
     "contact": ContributorType.ContactPerson,
@@ -73,17 +74,24 @@ def _concrete_year(value: date | str | None) -> int | None:
 
 
 def _normalize_doi(value: str, path: str) -> str:
-    candidate = value.strip()
-    if candidate.lower().startswith("doi:"):
-        candidate = candidate[4:]
-    parsed = urlsplit(candidate)
-    if parsed.scheme in {"http", "https"}:
-        if parsed.netloc.lower() not in {"doi.org", "dx.doi.org"}:
-            raise ConversionError(f"Invalid DOI at {path}")
-        candidate = parsed.path.lstrip("/")
-    if re.fullmatch(r"10\.\d{4,9}/\S+", candidate) is None:
+    candidate = normalize_doi(value)
+    if candidate is None:
         raise ConversionError(f"Invalid DOI at {path}")
     return candidate
+
+
+def _url_alternate_identifier(
+    value: str, path: str, issues: list[ConversionIssue]
+) -> dict[str, str] | None:
+    try:
+        normalized = str(_URL_ADAPTER.validate_python(value))
+    except ValidationError:
+        issues.append(_issue(path, "URL is not a valid DataCite alternate identifier"))
+        return None
+    return {
+        "alternateIdentifier": normalized,
+        "alternateIdentifierType": "URL",
+    }
 
 
 def _date(value: date | str | None, date_type: DateType) -> DateModel | None:
@@ -387,6 +395,13 @@ def _software_metadata_to_datacite(
                 "alternateIdentifierType": identifier.scheme or "Other",
             }
         )
+    if value.url:
+        url_identifier = _url_alternate_identifier(value.url, "url", issues)
+        if url_identifier is not None and all(
+            item["alternateIdentifier"] != url_identifier["alternateIdentifier"]
+            for item in alternate_identifiers
+        ):
+            alternate_identifiers.append(url_identifier)
 
     dates = [
         item
@@ -432,7 +447,6 @@ def _software_metadata_to_datacite(
         "doi": doi,
         "prefix": doi_prefix,
         "suffix": doi_suffix,
-        "url": value.url,
         "types": Types(
             resourceType=value.category,
             resourceTypeGeneral=ResourceTypeGeneral.Software,

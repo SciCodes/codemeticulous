@@ -67,14 +67,14 @@ def convert_command(
             input_data,
             target_version=version,
         )
+        for issue in result.issues:
+            click.echo(f"{issue.path}: {issue.message}", err=True)
         output_data = serialize(result.value, target_format, version)
     except (ConversionError, ValueError) as exc:
         if verbose:
             traceback.print_exc()
         raise click.ClickException(f"Error during conversion: {exc}") from exc
 
-    for issue in result.issues:
-        click.echo(f"{issue.path}: {issue.message}", err=True)
     if output_file:
         output_file.write(output_data)
     else:

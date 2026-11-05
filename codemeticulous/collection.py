@@ -200,6 +200,7 @@ def validate_collection(
     """Validate provider output against the structured collection contract."""
 
     if isinstance(value, CollectedSoftwareMetadata):
+        CollectedSoftwareMetadata.model_validate(value.model_dump(mode="json"))
         return value
     return CollectedSoftwareMetadata.model_validate(dict(value))
 

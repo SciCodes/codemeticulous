@@ -180,6 +180,41 @@ def test_cli_convert_failure_is_nonzero() -> None:
     assert "Error during conversion" in result.stderr
 
 
+def test_cli_reports_conversion_issues_before_serialization_failure() -> None:
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open("input.json", "w", encoding="utf-8") as file:
+            json.dump(
+                {
+                    "@type": "SoftwareSourceCode",
+                    "name": "Tool",
+                    "author": {"@type": "Person", "name": "Ada Lovelace"},
+                    "publisher": {"@type": "Organization", "name": "Archive"},
+                    "datePublished": "2024-01-01",
+                    "downloadUrl": "https://example.org/download",
+                },
+                file,
+            )
+
+        result = runner.invoke(
+            cli,
+            [
+                "convert",
+                "--from",
+                "codemeta",
+                "--to",
+                "datacite.xml",
+                "--version",
+                "4.6",
+                "input.json",
+            ],
+        )
+
+    assert result.exit_code != 0
+    assert "download_url: download URL is unsupported by DataCite" in result.stderr
+    assert "DataCite XML requires a DOI identifier" in result.stderr
+
+
 def test_cli_validation_failure_is_nonzero() -> None:
     runner = CliRunner()
     with runner.isolated_filesystem():

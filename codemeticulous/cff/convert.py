@@ -9,6 +9,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from codemeticulous.conversion import ConversionError, ConversionIssue, ConversionResult
+from codemeticulous.identifiers import normalize_doi
 from codemeticulous.models import (
     Agent,
     Identifier,
@@ -133,8 +134,9 @@ def _agent(agent: Agent, path: str, issues: list[ConversionIssue]) -> Person | E
 def _identifier(identifier: Identifier, path: str) -> CffIdentifier:
     scheme = (identifier.scheme or "").lower()
     value = identifier.value
+    normalized_doi = normalize_doi(value)
     if scheme == "doi":
-        match = _DOI.match(value)
+        match = _DOI.match(normalized_doi or "")
         if not match:
             raise ConversionError(f"{path}: invalid DOI")
         return DoiIdentifier(type="doi", value=match.group(1))
@@ -144,7 +146,7 @@ def _identifier(identifier: Identifier, path: str) -> CffIdentifier:
         return UrlIdentifier(type="url", value=value)
     if scheme == "other":
         return OtherIdentifier(type="other", value=value)
-    match = _DOI.match(value)
+    match = _DOI.match(normalized_doi or "")
     if match:
         return DoiIdentifier(type="doi", value=match.group(1))
     if _SWH.match(value):

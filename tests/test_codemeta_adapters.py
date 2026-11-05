@@ -30,8 +30,8 @@ def test_doi_urls_are_typed_when_read_from_codemeta_identifiers() -> None:
     )
 
     assert [(item.value, item.scheme) for item in result.value.identifiers] == [
-        ("https://doi.org/10.1234/example", "DOI"),
-        ("doi:10.1234/alternate", "DOI"),
+        ("10.1234/example", "DOI"),
+        ("10.1234/alternate", "DOI"),
     ]
 
 
